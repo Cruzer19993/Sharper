@@ -55,6 +55,12 @@ namespace Sharper.GameFiles
                 FpsCounterText.m_text = $"FPS: {(1 / gameTime.ElapsedGameTime.TotalSeconds).ToString("0")}";
                 fpsSamplingStopwatch.Reset();
             }
+
+            if (InputSystem.ButtonDown(MouseButton.Left))
+            {
+                Debug.WriteLine("check");
+                PaintEntity();
+            }
         }
         void PrepareEditor()
         {
@@ -145,6 +151,20 @@ namespace Sharper.GameFiles
         {
             selectedTileSprite.m_atlasX = x;
             selectedTileSprite.m_atlasY = y;
+        }
+
+        void PaintEntity()
+        {
+            if (_mouseInteractionSystem.RealEntityCount <= 0) return;
+            Entity entityUnderCursor = _mouseInteractionSystem.GetEntityUnderCursor();
+            if (entityUnderCursor == null) return;
+            if(entityUnderCursor.GetComponent<SpriteRenderer>() != null)
+            {
+                Debug.WriteLine(entityUnderCursor.entityID);
+                SpriteRenderer renderer = entityUnderCursor.GetComponent<SpriteRenderer>();
+                renderer.sprite.atlasX = selectedTileSprite.m_atlasX;
+                renderer.sprite.atlasY = selectedTileSprite.m_atlasY;
+            }
         }
 
         void GenerateNewGridButton(object sender, EventArgs args)

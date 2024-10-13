@@ -49,7 +49,7 @@ namespace Sharper.Systems.Backend
             Vector2 currentMousePos = InputSystem.MousePosition();
             float realPPS = pixelsPerSprite * cameraZoomLevel; //calculate current real pps
             //convert camera transform to game window cooridnates
-            Vector2 absoluteCursorPosition = currentMousePos - new Vector2(currentCameraTransform.Position.X,currentCameraTransform.Position.Y);
+            Vector2 absoluteCursorPosition = currentMousePos + new Vector2(currentCameraTransform.position.X,currentCameraTransform.position.Y);
             absoluteCursorPosition *= (1 / cameraZoomLevel);
             Entity entityUnderCursor = null;
             for (int i = 0; i < realArrayEntityCount; i++)
