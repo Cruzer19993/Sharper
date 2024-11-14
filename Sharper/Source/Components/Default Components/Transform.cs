@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Sharper.Components.GUI;
 
 namespace Sharper.ECS
 {
@@ -11,7 +12,6 @@ namespace Sharper.ECS
             Rotation = other.Rotation;
             Scale = other.Scale;
             lastPosition = other.lastPosition;
-            componentSignature.Set(1, true);
         }
         public Transform()
         {
@@ -20,7 +20,6 @@ namespace Sharper.ECS
             Rotation = Quaternion.Identity;
             Scale = Vector3.One;
             lastPosition = Position;
-            componentSignature.Set(1, true);
         }
         public Vector3 lastPosition;
         public Transform parent;

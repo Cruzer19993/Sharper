@@ -26,7 +26,7 @@ namespace Sharper.Systems.Backend.Loaders
          TILE_COLOR_B: tlc:4, tdc: 3
          [COMPONENTS] tlc:>5
          Transform (archetypes have default transform values)
-         SpriteRenderer
+         EntityRenderer
          ATLAS_X tdc:1
          ATLAS_Y tdc:2
          Z_INDEX tdc:3
@@ -153,22 +153,19 @@ namespace Sharper.Systems.Backend.Loaders
                                             tdc = 0;
                                             currentEntityArchetypeComponent = "";
                                             break;
-                                        case "SpriteRenderer":
-                                            if (!tileArchetype.HasComponent<SpriteRenderer>())
+                                        case "EntityRenderer":
+                                            if (!tileArchetype.HasComponent<EntityRenderer>())
                                             {
-                                                tileArchetype.AddComponent<SpriteRenderer>();
+                                                tileArchetype.AddComponent<EntityRenderer>();
                                                 mlc++;
                                             }
                                             switch (tdc)
                                             {
                                                 case 1:
-                                                    tileArchetype.GetComponent<SpriteRenderer>().sprite.atlasX = int.Parse(mapFileData[mlc].ToString());
+                                                    tileArchetype.GetComponent<EntityRenderer>().m_sprite.m_atlasX = int.Parse(mapFileData[mlc].ToString());
                                                     break;
                                                 case 2:
-                                                    tileArchetype.GetComponent<SpriteRenderer>().sprite.atlasY = int.Parse(mapFileData[mlc].ToString());
-                                                    break;
-                                                case 3:
-                                                    tileArchetype.GetComponent<SpriteRenderer>().sprite.zIndex = int.Parse(mapFileData[mlc].ToString());
+                                                    tileArchetype.GetComponent<EntityRenderer>().m_sprite.m_atlasY = int.Parse(mapFileData[mlc].ToString());
                                                     break;
                                                 default:
                                                     currentEntityArchetypeComponent = "";
@@ -232,7 +229,7 @@ namespace Sharper.Systems.Backend.Loaders
         }
         private Entity CreateNewTileEntityFromArchetype(Entity entity)
         {
-            //TODO: Add copy constructors to components: Transform, SpriteRenderer, Collider
+            //TODO: Add copy constructors to components: Transform, EntityRenderer, Collider
             //See which components are needed
             Type[] neededComponents = entity.GetTypesOfActiveComponents();
             //Create a new entity

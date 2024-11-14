@@ -8,7 +8,7 @@ namespace Sharper.ECS
      * bit vs component table
      * 0 - Component
      * 1 - Transform
-     * 2 - SpriteRenderer
+     * 2 - EntityRenderer
      * 3 - Camera
      * 4 - Collider
      * 5 - MouseInteractable
@@ -53,6 +53,10 @@ namespace Sharper.ECS
             InstanceID = newInstanceID;
         }
 
+        public void PropagateChangeMessage()
+        {
+            owner.EntityChangedEvent.Invoke(this,EventArgs.Empty);
+        }
         public void OnRemove()
         {
             owner = null;

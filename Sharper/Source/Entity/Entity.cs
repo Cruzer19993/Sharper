@@ -32,9 +32,9 @@ namespace Sharper.ECS
         private string entityName;
         private string entityTag;
         private bool dontRemoveWhenUnused = false;
-        private BitArray componentsSignature = new BitArray(256);
         private Dictionary<Type, List<Component>> components = new Dictionary<Type, List<Component>>(8);
-        
+
+        public EventHandler EntityChangedEvent;
         public int entityID;
         public int ComponentsOccupiedSize
         {
@@ -51,11 +51,6 @@ namespace Sharper.ECS
         {
             get { return usedBySystemCount; }
             set { usedBySystemCount = value; OnSystemUsageChange(); }
-        }
-
-        public BitArray ComponentsSignature
-        {
-            get { return componentsSignature; }
         }
 
         public string EntityName

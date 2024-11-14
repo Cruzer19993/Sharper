@@ -105,8 +105,8 @@ namespace Sharper.Systems.Backend.GUI
                         if (inputBox != null && btn == MouseButton.Left)
                         {
                             if(currentInputBox != null)
-                                currentInputBox.owner.GetComponent<GUIRenderer>().m_color = Color.Black;
-                            currEntity.GetComponent<GUIRenderer>().m_color = Color.Green;
+                                currentInputBox.owner.GetComponent<EntityRenderer>().textToRender.m_color = Color.Black;
+                            currEntity.GetComponent<EntityRenderer>().textToRender.m_color = Color.Green;
                             inputBox.m_active = true;
                             activatedInputBox = true;
                             currentInputBox = inputBox;
@@ -118,7 +118,7 @@ namespace Sharper.Systems.Backend.GUI
             }
             if (activatedInputBox)
             {
-                currentInputBox.owner.GetComponent<GUIRenderer>().m_color = Color.Black;
+                currentInputBox.owner.GetComponent<EntityRenderer>().textToRender.m_color = Color.Black;
                 activatedInputBox = false;
                 currentInputBox.m_active = false;
                 currentInputBox = null;

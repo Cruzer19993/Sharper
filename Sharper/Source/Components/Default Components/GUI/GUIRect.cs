@@ -15,21 +15,18 @@ namespace Sharper.Components.GUI
             m_Position = position;
             m_size = size;
             m_scale = scale;
-            componentSignature.Set(7, true);
         }
         public GUIRect(Vector2 position, Vector2 size)
         {
             m_size = size;
             m_Position = position;
             m_scale = Vector2.One;
-            componentSignature.Set(7, true);
         }
         public GUIRect()
         {
             m_size = Vector2.Zero;
             m_Position = Vector2.Zero;
             m_scale = Vector2.One;
-            componentSignature.Set(7, true);
         }
         protected Vector2 m_scale;
         protected Vector2 m_size;

@@ -25,12 +25,13 @@ namespace Sharper
         protected RenderingSystem _renderingSystem = new RenderingSystem();
         protected InputSystem _inputSystem = new InputSystem();
         protected ResourceManager _resourceManager = new ResourceManager();
-        protected GUIRenderingSystem _guiRenderingSystem = new GUIRenderingSystem();
         protected MouseEntityInteractionSystem _mouseInteractionSystem = new MouseEntityInteractionSystem();
         protected GUIEventSystem _guiEventSystem = new GUIEventSystem();
         protected SpriteFont _defaultFont;
         protected Vector2 viewportCenter;
         protected bool useTestScene = false;
+        protected RenderTarget2D _gridEntitiesRenderTarget;
+        protected RenderTarget2D _worldEntitiesRenderTarget;
         protected RenderTarget2D _guiRenderTarget;
         protected RenderTarget2D _textRenderTarget;
         //DEBUG VARS
@@ -54,10 +55,11 @@ namespace Sharper
             _graphics.PreferredBackBufferWidth = 1920;
             _graphics.ApplyChanges();
             //prepare test level
-            //set sprite atlas settings
+            //set m_sprite atlas settings
             _renderingSystem.SetRenderingSettings(new SpriteAtlasSettings(16, 2, 2));
             SceneManager.OnSceneLoad += AttachDerivedBackendSystems;
             SceneManager.OnSceneLoad += _renderingSystem.OnSceneChange;
+            SceneManager.OnSceneLoad += OnSceneLoad;
             _renderingSystem._graphics = _graphics;
             base.Initialize();
         }
@@ -65,20 +67,19 @@ namespace Sharper
         //Derived systems are systems that work with entites of the current level.
         public void AttachDerivedBackendSystems(object sender, SceneEventArgs args)
         {
-            args.argScene.systemManager.AttachSystem(_guiRenderingSystem);
             args.argScene.systemManager.AttachSystem(_mouseInteractionSystem);
             args.argScene.systemManager.AttachSystem(_renderingSystem);
             args.argScene.systemManager.AttachSystem(_guiEventSystem);
             Debug.WriteLine("[INFO]Attached derived backend systems.");
         }
-        protected virtual void InitializeAfterContent()
+        protected virtual void OnSceneLoad(object sender, SceneEventArgs args)
         {
-            if (!useTestScene) return;
-            _sceneManager.LoadScene(testScene); //load level
-            _sceneManager.GetCurrentScene().systemManager.AttachSystem(new SimpleMovement());
-            SceneManager.CurrentScene.SpawnEntity(EntityHelper.CreateCameraMovable(System.Numerics.Vector3.One, 2f, true));
-        }
 
+        }
+        protected virtual void OnEngineReady()
+        {
+
+        }
         protected override void LoadContent()
         {
             //load all textures into Resource Manager
@@ -94,9 +95,9 @@ namespace Sharper
             _defaultFont = Content.Load<SpriteFont>("defaultFont");
             Debug.WriteLine($"[INFO] {textureFiles.Length} Textures loaded into resource manager successfully.");
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            //load the sprite atlas texture
+            //load the m_sprite atlas texture
             _renderingSystem.textureAtlas = _resourceManager.GetTexture("atlas");
-            InitializeAfterContent();
+            OnEngineReady();
         }
 
         protected override void Update(GameTime gameTime)
@@ -107,7 +108,7 @@ namespace Sharper
         }
         protected override void Draw(GameTime gameTime)
         {
-            var currentScene = _sceneManager.GetCurrentScene();
+            var currentScene =_sceneManager.GetCurrentScene();
             if (currentScene == null) return;
 
             if (_renderingSystem.availableCameras.Length < 1 || !_renderingSystem.isInitialized)
@@ -150,126 +151,61 @@ namespace Sharper
                 }
             }
             _spriteBatch.End();*/
-            // Frustum Culling with Chunks.
-            Rectangle frustumRect = _renderingSystem.GetCameraFrustumRectangle();
-            Chunk[] worldChunks = currentScene.entityChunks.ToArray();
-            List<Entity> visibleEntities = new List<Entity>();
-            if (_renderingSystem.RealEntityCount > 0)
-            {
-                foreach (Chunk chunk in worldChunks) //check surface chunks
-                {
-                    //surface level checks
-                    Rectangle surfaceChunkRect = chunk.GetChunkRect(); //fully visible
-                    if (frustumRect.Contains(surfaceChunkRect))
-                    {
-                        visibleEntities.AddRange(chunk.chunkEntities.Values);
-                    }
-                    else if (frustumRect.Intersects(surfaceChunkRect)) //intersects.
-                    {
-                        bool checkEntitiesOnFinalDepth = false;
-                        for (int i = 1; i < chunk.nodeDepth; i++)
-                        {
-                            Chunk[] deeperChunks = chunk.GetNodesAtLevel(i);
-                            foreach (Chunk deeperChunk in deeperChunks)
-                            {
-                                Rectangle deeperChunkRect = deeperChunk.GetChunkRect();
-                                if (frustumRect.Contains(deeperChunkRect))//fully visible
-                                {
-                                    visibleEntities.AddRange(deeperChunk.chunkEntities.Values);
-                                }
-                                if (frustumRect.Intersects(deeperChunkRect)) //partially visible
-                                {
-                                    if (i == chunk.nodeDepth - 1)
-                                    {
-                                        checkEntitiesOnFinalDepth = true;
-                                    }
-                                    else continue;
-                                }
-                                else continue;//not visible
-                            }
-                        }
-                        if (checkEntitiesOnFinalDepth)
-                        {
-                            Chunk[] finalChunks = chunk.GetNodesAtLevel(chunk.nodeDepth);
-                            foreach (Chunk finalChunk in finalChunks)
-                            {
-                                foreach (Entity entity in finalChunk.chunkEntities.Values)
-                                {
-                                    Transform entityTransform = entity.GetComponent<Transform>();
-                                    Rectangle entityRect = new Rectangle((int)entityTransform.position.X, (int)entityTransform.position.Y, pps, pps);
-                                    if (frustumRect.Intersects(entityRect)) //check if entity is visible
-                                    {
-                                        visibleEntities.Add(entity);
-                                    }
-                                }
-                            }
-                            checkEntitiesOnFinalDepth = false;
-                        }
-                    }
-                    else continue; //not visible
-                }
-            }
-            //Debug.WriteLine($"[INFO]VIsible objects: {visibleEntities.Count}");
-            // Render everything else with sprite renderer
             int pixelsPerSprite = _renderingSystem.SpriteAtlasSettings.pixelsPerSprite;
+            GraphicsDevice.SetRenderTarget(_gridEntitiesRenderTarget);
+            _spriteBatch.Begin(samplerState:SamplerState.PointClamp, transformMatrix: viewMatrix);
+                foreach(Entity x in _renderingSystem.GridEntities)
+                {
+                    Transform entityTransform = x.GetComponent<Transform>();
+                    EntityRenderer entityRenderer = x.GetComponent<EntityRenderer>();
+                    int row = entityRenderer.m_sprite.m_atlasX;
+                    int col = entityRenderer.m_sprite.m_atlasY;
+                    Color entityColor = entityRenderer.m_sprite.m_color; 
+                    Rectangle sourceRect = new Rectangle(pixelsPerSprite * col, pixelsPerSprite * row, pixelsPerSprite, pixelsPerSprite);
+                _spriteBatch.Draw(_renderingSystem.textureAtlas, new Vector2(entityTransform.position.X, entityTransform.position.Y),sourceRect,entityColor, 0, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                }
+            _spriteBatch.End();
+            GraphicsDevice.SetRenderTarget(_worldEntitiesRenderTarget);
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: viewMatrix);
-            foreach (var visibleEntity in visibleEntities)
+            foreach (Entity x in _renderingSystem.WorldEntities)
             {
-                Transform entityTransform = visibleEntity.GetComponent<Transform>();
-                SpriteRenderer entityRenderer = visibleEntity.GetComponent<SpriteRenderer>();
-                int col = entityRenderer.sprite.atlasX;
-                int row = entityRenderer.sprite.atlasY;
-                Vector3 entityPosition = entityTransform.position;
-                Rectangle sourceRect = new Rectangle(pixelsPerSprite * col, pixelsPerSprite * row, pixelsPerSprite, pixelsPerSprite); // Cut a rect out of the texture atlas
-                _spriteBatch.Draw(_renderingSystem.textureAtlas, new Vector2(entityPosition.X, entityPosition.Y), sourceRect, entityRenderer.spriteColor, 0, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                Transform entityTransform = x.GetComponent<Transform>();
+                EntityRenderer entityRenderer = x.GetComponent<EntityRenderer>();
+                int row = entityRenderer.m_sprite.m_atlasX;
+                int col = entityRenderer.m_sprite.m_atlasY;
+                Color entityColor = entityRenderer.m_sprite.m_color;
+                Rectangle sourceRect = new Rectangle(pixelsPerSprite * col, pixelsPerSprite * row, pixelsPerSprite, pixelsPerSprite);
+                _spriteBatch.Draw(_renderingSystem.textureAtlas, new Vector2(entityTransform.position.X, entityTransform.position.Y), sourceRect, entityColor, 0, Vector2.Zero, 1f, SpriteEffects.None, 0f);
             }
             _spriteBatch.End();
-
-            if (_guiRenderingSystem.RealEntityCount > 0)
+            GraphicsDevice.SetRenderTarget(_guiRenderTarget);
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
+            foreach(Entity x in _renderingSystem.GUIEntities)
             {
-                // Render GUI to separate render target instead of the backbuffer
-                GraphicsDevice.SetRenderTarget(_guiRenderTarget);
-                _spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
-                var guiMatchingEntities = _guiRenderingSystem.MatchingEntities;
-                for (int i = 0; i < _guiRenderingSystem.RealEntityCount; i++)
+                GUIRect rect = x.GetComponent<GUIRect>();
+                Sprite sprite = x.GetComponent<EntityRenderer>().m_sprite;
+                if (sprite.m_atlasX == -1)
                 {
-                    Entity currEntity = guiMatchingEntities[i];
-                    GUIRect guiRect = currEntity.GetComponent<GUIRect>();
-                    GUIRenderer guiRenderer = currEntity.GetComponent<GUIRenderer>();
-                    if (guiRenderer.m_renderable)
-                    {
-                        Texture2D guiTexture = _resourceManager.GetTexture(guiRenderer.m_textureName);
-                        _spriteBatch.Draw(guiTexture, guiRect.GetRect(), guiRenderer.m_color);
-                    }
-                    if (currEntity.HasComponent<GUIInputBox>())
-                    {
-                        string text = currEntity.GetComponent<GUIInputBox>().m_text;
-                        _spriteBatch.DrawString(_defaultFont, text, guiRect.GetPosition() + Vector2.UnitX * 8 + Vector2.UnitY * 2, Color.WhiteSmoke);
-                    }
-                    if (currEntity.HasComponent<GUISprite>())
-                    {
-                        GUISprite sprite = currEntity.GetComponent<GUISprite>();
-                        if(sprite.m_atlasX == -1)
-                        {
-                            Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
-                            _spriteBatch.Draw(spriteTex, guiRect.GetRect(), new Rectangle(sprite.m_atlasX, sprite.m_atlasY, pps, pps), Color.White);
-                        }
-                        else
-                        {
-                            Rectangle sourceRect = new Rectangle(pixelsPerSprite * sprite.m_atlasX, pixelsPerSprite * sprite.m_atlasY, pixelsPerSprite, pixelsPerSprite);
-                            _spriteBatch.Draw(_renderingSystem.textureAtlas, guiRect.GetRect(), sourceRect, Color.White);
-                        }
-                    }
-                    if (currEntity.HasComponent<GUIText>())
-                    {
-                        string text = currEntity.GetComponent<GUIText>().m_text;
-                        Color color = currEntity.GetComponent<GUIText>().m_color;
-                        _spriteBatch.DrawString(_defaultFont, text, guiRect.GetPosition(), color);
-                    }
+                    Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
+                    _spriteBatch.Draw(spriteTex, rect.GetRect(), new Rectangle(sprite.m_atlasX, sprite.m_atlasY, pps, pps), Color.White);
                 }
-                _spriteBatch.End();
+                else
+                {
+                    Rectangle sourceRect = new Rectangle(pixelsPerSprite * sprite.m_atlasX, pixelsPerSprite * sprite.m_atlasY, pixelsPerSprite, pixelsPerSprite);
+                    _spriteBatch.Draw(_renderingSystem.textureAtlas, rect.GetRect(), sourceRect, Color.White);
+                }
             }
-
+            _spriteBatch.End();
+            GraphicsDevice.SetRenderTarget(_textRenderTarget);
+            _spriteBatch.Begin();
+            foreach(Entity x in _renderingSystem.TextEntities)
+            {
+                GUIRect textRect = x.GetComponent<GUIRect>();
+                string text = x.GetComponent<EntityRenderer>().textToRender.m_text;
+                Color color = x.GetComponent<EntityRenderer>().textToRender.m_color;
+                _spriteBatch.DrawString(_defaultFont, text, textRect.GetPosition(), color);
+            }
+            _spriteBatch.End();
             base.Draw(gameTime);
         }
     }

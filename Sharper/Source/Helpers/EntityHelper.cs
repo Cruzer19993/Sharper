@@ -28,11 +28,11 @@ namespace Sharper.Helpers
 
         public static Entity CreateGridTile(Vector3 position)
         {
-            Entity gridTile = new Entity("Grid Tile", new Type[] { typeof(Transform), typeof(MouseInteractable), typeof(SpriteRenderer) });
-            SpriteRenderer spriteRenderer = gridTile.GetComponent<SpriteRenderer>();
-            spriteRenderer.sprite.atlasX = 0;
-            spriteRenderer.sprite.atlasY = 1;
-            spriteRenderer.spriteColor = Color.White;
+            Entity gridTile = new Entity("Grid Tile", new Type[] { typeof(Transform), typeof(MouseInteractable), typeof(EntityRenderer) });
+            EntityRenderer spriteRenderer = gridTile.GetComponent<EntityRenderer>();
+            spriteRenderer.m_sprite.m_atlasX = 0;
+            spriteRenderer.m_sprite.m_atlasY = 1;
+            spriteRenderer.m_sprite.m_color = Color.White;
             gridTile.GetComponent<Transform>().position = position;
             return gridTile;
         }

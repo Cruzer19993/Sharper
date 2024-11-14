@@ -31,16 +31,19 @@ namespace Sharper.GameFiles
         GUILayout leftSideLayoutGroup;
         GUISprite selectedTileSprite;
         int selectedTextureAtlasX, selectedTextureAtlasY;
-        static readonly Type[] EditorTileGridComponentTypes = { typeof(Transform), typeof(MouseInteractable), typeof(SpriteRenderer) };
+        static readonly Type[] EditorTileGridComponentTypes = { typeof(Transform), typeof(MouseInteractable), typeof(EntityRenderer) };
         protected override void Initialize()
         {
             base.Initialize();
         }
-        protected override void InitializeAfterContent()
+        protected override void OnSceneLoad(object sender, SceneEventArgs args)
+        {
+            PrepareEditor();
+        }
+        protected override void OnEngineReady()
         {
             editorScene.useWorldLoader = false;
             _sceneManager.LoadScene(editorScene);
-            PrepareEditor();
         }
 
         protected override void Update(GameTime gameTime)
@@ -58,7 +61,6 @@ namespace Sharper.GameFiles
 
             if (InputSystem.ButtonDown(MouseButton.Left))
             {
-                Debug.WriteLine("check");
                 PaintEntity();
             }
         }
@@ -72,6 +74,7 @@ namespace Sharper.GameFiles
             GUIHelper.CreateGUILayout(Vector2.UnitY * 30f, Vector2.UnitX * 4, Vector2.Zero, out leftSideLayoutGroup);
             CreateWorldGenerationUI();
             CreateTileEditorUI();
+            CreateLayerEditorUI();
         }
 
         void RemoveCurrentGridEntities()
@@ -98,6 +101,10 @@ namespace Sharper.GameFiles
                 Entity tile = EntityHelper.CreateGridTile(new Vector3(posx * pps, posy * pps, 0f));
                 editorScene.SpawnEntity(tile);
             }
+        }
+        void CreateLayerEditorUI()
+        {
+
         }
         void CreateTileEditorUI()
         {
@@ -158,12 +165,11 @@ namespace Sharper.GameFiles
             if (_mouseInteractionSystem.RealEntityCount <= 0) return;
             Entity entityUnderCursor = _mouseInteractionSystem.GetEntityUnderCursor();
             if (entityUnderCursor == null) return;
-            if(entityUnderCursor.GetComponent<SpriteRenderer>() != null)
+            if(entityUnderCursor.GetComponent<EntityRenderer>() != null)
             {
-                Debug.WriteLine(entityUnderCursor.entityID);
-                SpriteRenderer renderer = entityUnderCursor.GetComponent<SpriteRenderer>();
-                renderer.sprite.atlasX = selectedTileSprite.m_atlasX;
-                renderer.sprite.atlasY = selectedTileSprite.m_atlasY;
+                EntityRenderer renderer = entityUnderCursor.GetComponent<EntityRenderer>();
+                renderer.m_sprite.m_atlasX = selectedTileSprite.m_atlasX;
+                renderer.m_sprite.m_atlasY = selectedTileSprite.m_atlasY;
             }
         }
 
@@ -193,13 +199,13 @@ namespace Sharper.GameFiles
         {
             Entity gridTile = new Entity("Grid Tile", EditorTileGridComponentTypes);
             Transform transform = gridTile.GetComponent<Transform>();
-            SpriteRenderer spriteRenderer = gridTile.GetComponent<SpriteRenderer>();
+            EntityRenderer spriteRenderer = gridTile.GetComponent<EntityRenderer>();
 
             // Directly set the properties to avoid multiple calls to GetComponent
             transform.position = position;
-            spriteRenderer.sprite.atlasX = 0;
-            spriteRenderer.sprite.atlasY = 1;
-            spriteRenderer.spriteColor = Color.White;
+            spriteRenderer.m_sprite.m_atlasX = 0;
+            spriteRenderer.m_sprite.m_atlasY = 1;
+            spriteRenderer.m_sprite.m_color = Color.White;
 
             return gridTile;
         }

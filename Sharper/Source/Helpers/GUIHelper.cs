@@ -10,12 +10,13 @@ namespace Sharper.Source.Helpers
     {
         public static Entity CreateButton(Vector2 position, Vector2 size, string buttonText, out GUIButton buttonComponent, bool renderHitbox = false)
         {
-            Entity buttonEntity = new Entity("Button", new Type[] { typeof(GUIRect), typeof(GUIButton), typeof(GUIRenderer), typeof(GUIText)});
+            Entity buttonEntity = new Entity("Button", new Type[] { typeof(GUIRect), typeof(GUIButton), typeof(EntityRenderer), typeof(GUIText)});
+            buttonEntity.GetComponent<EntityRenderer>().m_renderTarget = RenderTarget.GUI;
             GUIRect btnRect = buttonEntity.GetComponent<GUIRect>();
             btnRect.SetPosition(position);
             btnRect.SetSize(size);
-            buttonEntity.GetComponent<GUIText>().m_text = buttonText;
-            buttonEntity.GetComponent<GUIText>().m_color = Color.Black;
+            GUIText btnText = new GUIText(buttonText, 12, Color.Black);
+            buttonEntity.GetComponent<EntityRenderer>().textToRender = btnText;
             buttonComponent = buttonEntity.GetComponent<GUIButton>();
             if (SceneManager.CurrentScene != null)
             {
@@ -26,13 +27,14 @@ namespace Sharper.Source.Helpers
 
         public static Entity CreateInputBox(Vector2 position, Vector2 size, out GUIInputBox inputBox, string labelText = "")
         {
-            Entity inputBoxEntity = new Entity("InputBox", new Type[] { typeof(GUIRect), typeof(GUIRenderer), typeof(GUIInputBox) });
+            Entity inputBoxEntity = new Entity("InputBox", new Type[] { typeof(GUIRect), typeof(EntityRenderer), typeof(GUIInputBox) });
+            inputBoxEntity.GetComponent<EntityRenderer>().m_renderTarget = RenderTarget.GUI;
             GUIRect ibRect = inputBoxEntity.GetComponent<GUIRect>();
             ibRect.SetPosition(position);
             ibRect.SetSize(size);
             inputBox = inputBoxEntity.GetComponent<GUIInputBox>();
-            inputBoxEntity.GetComponent<GUIRenderer>().m_textureName = "GUIRectangle";
-            inputBoxEntity.GetComponent<GUIRenderer>().m_color = Color.WhiteSmoke;
+            inputBoxEntity.GetComponent<EntityRenderer>().m_sprite.m_textureName = "GUIRectangle";
+            inputBoxEntity.GetComponent<EntityRenderer>().m_sprite.m_color = Color.WhiteSmoke;
             if (SceneManager.CurrentScene != null)
             {
                 SceneManager.CurrentScene.SpawnEntity(inputBoxEntity);
@@ -43,10 +45,11 @@ namespace Sharper.Source.Helpers
 
         public static Entity CreateUIPanel(Vector2 position, Vector2 size, Color color)
         {
-            Entity panelEntity = new Entity("UIPanel", new Type[] {typeof(GUIRect),typeof(GUIRenderer) });
+            Entity panelEntity = new Entity("UIPanel", new Type[] {typeof(GUIRect),typeof(EntityRenderer) });
             panelEntity.GetComponent<GUIRect>().SetPosition(position);
             panelEntity.GetComponent<GUIRect>().SetSize(size);
-            panelEntity.GetComponent<GUIRenderer>().m_color = color;
+            panelEntity.GetComponent<EntityRenderer>().m_sprite.m_color = color;
+            panelEntity.GetComponent<EntityRenderer>().m_renderTarget = RenderTarget.GUI;
             if (SceneManager.CurrentScene != null)
             {
                 SceneManager.CurrentScene.SpawnEntity(panelEntity);
@@ -56,12 +59,12 @@ namespace Sharper.Source.Helpers
 
         public static Entity CreateText(Vector2 position, string text, Color textColor)
         {
-            Entity textEntity = new Entity("Text", new Type[] {typeof(GUIText),typeof(GUIRect),typeof(GUIRenderer) });
+            Entity textEntity = new Entity("Text", new Type[] {typeof(GUIRect),typeof(EntityRenderer) });
             textEntity.GetComponent<GUIRect>().SetPosition(position);
             textEntity.GetComponent<GUIRect>().SetSize(new Vector2(100,20));
-            textEntity.GetComponent<GUIText>().m_text = text;
-            textEntity.GetComponent<GUIText>().m_color = textColor;
-            textEntity.GetComponent<GUIRenderer>().m_renderable = false;
+            textEntity.GetComponent<EntityRenderer>().m_renderTarget = RenderTarget.Text;
+            GUIText guiText = new GUIText(text,12,textColor);
+            textEntity.GetComponent<EntityRenderer>().textToRender = guiText;
             if(SceneManager.CurrentScene != null)
             {
                 SceneManager.CurrentScene.SpawnEntity(textEntity);
@@ -71,7 +74,7 @@ namespace Sharper.Source.Helpers
 
         public static Entity CreateSpriteButton(string textureName,Vector2 position, out GUISprite spriteComponent, out GUIButton buttonComponent)
         {
-            Entity buttonEntity = new Entity("Button", new Type[] { typeof(GUIRect), typeof(GUIButton), typeof(GUIRenderer), typeof(GUISprite) });
+            Entity buttonEntity = new Entity("Button", new Type[] { typeof(GUIRect), typeof(GUIButton), typeof(EntityRenderer), typeof(GUISprite) });
             GUIRect btnRect = buttonEntity.GetComponent<GUIRect>();
             btnRect.SetPosition(position);
             Vector2 texSize = new Vector2(32, 32);
@@ -79,6 +82,7 @@ namespace Sharper.Source.Helpers
             buttonComponent = buttonEntity.GetComponent<GUIButton>();
             buttonEntity.GetComponent<GUISprite>().m_textureName = textureName;
             spriteComponent = buttonEntity.GetComponent<GUISprite>();
+            buttonEntity.GetComponent<EntityRenderer>().m_renderTarget = RenderTarget.GUI;
             if (SceneManager.CurrentScene != null)
             {
                 SceneManager.CurrentScene.SpawnEntity(buttonEntity);
