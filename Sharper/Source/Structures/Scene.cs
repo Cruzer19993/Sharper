@@ -31,11 +31,9 @@ namespace Sharper.Structures
         public EntityManager entityManager;
         public SystemManager systemManager;
         public WorldLoader worldLoader;
-        public List<Chunk> entityChunks;
         public void OnSceneLoad(SceneManager manager)
         {
             PPS = RenderingSystem.Instance.SpriteAtlasSettings.pixelsPerSprite;
-            CreateSurfaceChunks();
             string currentMapName;
             if (useWorldLoader)
             {
@@ -47,27 +45,6 @@ namespace Sharper.Structures
             manager.DoneLoadingScene();
         }
 
-
-        public void CreateSurfaceChunks()
-        {
-            if(entityChunks == null)
-            {
-                entityChunks = new List<Chunk>(ZERO_LEVEL_CHUNK_DISTANCE * ZERO_LEVEL_CHUNK_DISTANCE);
-            }
-            int halfChunkDistance = ZERO_LEVEL_CHUNK_DISTANCE / 2;
-            //Creating the chunks.
-            for (int x = -halfChunkDistance; x < halfChunkDistance; x++)
-            {
-                for (int y = -halfChunkDistance; y < halfChunkDistance; y++)
-                {
-                    Rectangle chunkRect = new Rectangle(x * ZERO_LEVEL_CHUNK_SIZE * PPS, y * ZERO_LEVEL_CHUNK_SIZE * PPS, ZERO_LEVEL_CHUNK_SIZE*PPS, ZERO_LEVEL_CHUNK_SIZE*PPS);
-                    Chunk newChunk = new Chunk(chunkRect, 0);
-                    entityChunks.Add(newChunk);
-                    newChunk.DeepenChunk();
-                    newChunk.DeepenChunk();
-                }
-            }
-        }
         public void SpawnEntity(Entity entity)
         {
             entityManager.RegisterEntity(ref entity);

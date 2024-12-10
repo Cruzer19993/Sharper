@@ -23,13 +23,13 @@ namespace Sharper.GameFiles
         Stopwatch fpsSamplingStopwatch = new Stopwatch();
         Scene editorScene = new Scene();
         GUIButton generateWorldButton;
-        GUIInputBox worldSizeXInputBox;
-        GUIInputBox worldSizeYInputBox;
+        GUIText worldSizeXInputBox;
+        GUIText worldSizeYInputBox;
         GUIText FpsCounterText;
         GUILayout worldGenerationLayoutGroup;
         List<Entity> currentEditorGridEntites;
         GUILayout leftSideLayoutGroup;
-        GUISprite selectedTileSprite;
+        EntityRenderer selectedTileRenderer;
         int selectedTextureAtlasX, selectedTextureAtlasY;
         static readonly Type[] EditorTileGridComponentTypes = { typeof(Transform), typeof(MouseInteractable), typeof(EntityRenderer) };
         protected override void Initialize()
@@ -70,7 +70,6 @@ namespace Sharper.GameFiles
             editorScene.systemManager.AttachSystem(new LevelEditorCameraMover());
             editorScene.SpawnEntity(EntityHelper.CreateCameraMovable(Vector3.Zero, 1, true));
             FpsCounterText = GUIHelper.CreateText(new Vector2(600, 0), "999", Color.WhiteSmoke).GetComponent<GUIText>();
-            editorScene.SpawnEntity(FpsCounterText.owner);
             GUIHelper.CreateGUILayout(Vector2.UnitY * 30f, Vector2.UnitX * 4, Vector2.Zero, out leftSideLayoutGroup);
             CreateWorldGenerationUI();
             CreateTileEditorUI();
@@ -120,17 +119,17 @@ namespace Sharper.GameFiles
             {
                 for (int y = 0; y < textureHeight; y += atlasSettings.pixelsPerSprite)
                 {
-                    GUILayoutManager.AddToLayoutGroup(ref tileEditorGrid, GUIHelper.CreateSpriteButton("atlas", Vector2.Zero, out GUISprite sprite, out GUIButton btn).GetComponent<GUIRect>());
+                    GUILayoutManager.AddToLayoutGroup(ref tileEditorGrid, GUIHelper.CreateSpriteButton(Vector2.Zero, out EntityRenderer rend, out GUIButton btn).GetComponent<GUIRect>());
                     int localSpriteX = (int)x / atlasSettings.pixelsPerSprite;
                     int localSpriteY = (int)y / atlasSettings.pixelsPerSprite;
-                    sprite.m_atlasX = localSpriteX;
-                    sprite.m_atlasY = localSpriteY;
+                    rend.m_sprite.m_atlasX = localSpriteX;
+                    rend.m_sprite.m_atlasY = localSpriteY;
                     btn.OnClick += delegate { SelectTexture(localSpriteX, localSpriteY); };
                 }
             }
             GUIHelper.CreateGUILayout(Vector2.UnitX * 20f, Vector2.Zero, Vector2.Zero, out var selectedTextureDisplayHLG);
             GUILayoutManager.AddToLayoutGroup(ref selectedTextureDisplayHLG, GUIHelper.CreateText(Vector2.Zero, "Selected Texture", Color.White).GetComponent<GUIRect>());
-            GUILayoutManager.AddToLayoutGroup(ref selectedTextureDisplayHLG, GUIHelper.CreateSpriteButton("GUIDefaultTexture",Vector2.Zero,out selectedTileSprite, out GUIButton btn20).GetComponent<GUIRect>());
+            GUILayoutManager.AddToLayoutGroup(ref selectedTextureDisplayHLG, GUIHelper.CreateSpriteButton(Vector2.Zero,out selectedTileRenderer, out GUIButton btn20).GetComponent<GUIRect>());
             GUILayoutManager.AddToLayoutGroup(ref tileEditorLayoutGroup, selectedTextureDisplayHLG.owner.GetComponent<GUIRect>());
         }
 
@@ -156,20 +155,19 @@ namespace Sharper.GameFiles
 
         void SelectTexture(int x, int y)
         {
-            selectedTileSprite.m_atlasX = x;
-            selectedTileSprite.m_atlasY = y;
+            selectedTileRenderer.m_sprite.m_atlasX = x;
+            selectedTileRenderer.m_sprite.m_atlasY = y;
         }
 
         void PaintEntity()
         {
-            if (_mouseInteractionSystem.RealEntityCount <= 0) return;
             Entity entityUnderCursor = _mouseInteractionSystem.GetEntityUnderCursor();
             if (entityUnderCursor == null) return;
             if(entityUnderCursor.GetComponent<EntityRenderer>() != null)
             {
                 EntityRenderer renderer = entityUnderCursor.GetComponent<EntityRenderer>();
-                renderer.m_sprite.m_atlasX = selectedTileSprite.m_atlasX;
-                renderer.m_sprite.m_atlasY = selectedTileSprite.m_atlasY;
+                renderer.m_sprite.m_atlasX = selectedTileRenderer.m_sprite.m_atlasX;
+                renderer.m_sprite.m_atlasY = selectedTileRenderer.m_sprite.m_atlasY;
             }
         }
 

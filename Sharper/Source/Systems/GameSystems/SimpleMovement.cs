@@ -14,19 +14,19 @@ namespace Sharper.Systems.GameSystems
     {
         public float scrollSpeed = 100f;
         float deltaMovement = 0.0f;
+        private MatchingPattern SMPattern = new MatchingPattern(typeof(SimpleMover), typeof(Transform), typeof(Camera));
         public SimpleMovement() { }
         public override void Initialize()
         {
-            matchingComponentTypes = new Type[] { typeof(SimpleMover), typeof(Transform),typeof(Camera)};
+            AddMatchingPatterns(SMPattern);
             base.Initialize();
         }
         public override void GameUpdate()
         {
 
         }
-        public override void EntityUpdate(Entity target)
+        public override void OnEntityUpdate(Entity target, MatchingPattern pattern)
         {
-            if (realArrayEntityCount == 0) return;
             Vector3 dir = Vector3.Zero;
             if (InputSystem.IsKeyDown(Keys.D)) dir -= Vector3.UnitX;
             if (InputSystem.IsKeyDown(Keys.A)) dir += Vector3.UnitX;
@@ -43,6 +43,14 @@ namespace Sharper.Systems.GameSystems
         public override void Start()
         {
 
+        }
+
+        public override void OnEntityAttached(Entity target, MatchingPattern pattern)
+        {
+        }
+
+        public override void OnEntityDetached(Entity target)
+        {
         }
     }
 }

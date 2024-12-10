@@ -23,6 +23,7 @@ namespace Sharper.ECS
         }
         public Vector3 lastPosition;
         public Transform parent;
+        public Rectangle renderRect;
         public Vector3 position;
         public Vector3 Position
         {

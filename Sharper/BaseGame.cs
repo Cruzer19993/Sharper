@@ -110,8 +110,8 @@ namespace Sharper
         {
             var currentScene =_sceneManager.GetCurrentScene();
             if (currentScene == null) return;
-
-            if (_renderingSystem.availableCameras.Length < 1 || !_renderingSystem.isInitialized)
+            if (!_renderingSystem.isInitialized) return;
+            if (_renderingSystem.availableCameras.Length < 1)
             {
                 Debug.WriteLine("[WARN] Camera not found for rendering.");
                 _renderingSystem.CheckForCameras();
@@ -128,7 +128,7 @@ namespace Sharper
             //Render chunk borders.
             /*_spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: viewMatrix);
             Rectangle _gridSourceRect = new Rectangle(0, 0, pps, pps);
-            foreach (Chunk chunk in currentScene.entityChunks)
+            foreach (FrustumQuadTreeNode chunk in currentScene.entityChunks)
             {
                 if (chunk.nodeDepth == 0)
                 {
@@ -141,8 +141,8 @@ namespace Sharper
                     {
                         Color nodeDepthColor = i > 0 ? Color.Blue : Color.Red;
                         nodeDepthColor = i > 1 ? Color.Green : nodeDepthColor;
-                        Chunk[] levelChunks = chunk.GetNodesAtLevel(i);
-                        foreach (Chunk currChunk in levelChunks)
+                        FrustumQuadTreeNode[] levelChunks = chunk.GetNodesAtLevel(i);
+                        foreach (FrustumQuadTreeNode currChunk in levelChunks)
                         {
                             Rectangle chunkRect = currChunk.GetChunkRect();
                             _spriteBatch.Draw(hitboxOutlineTex, chunkRect, nodeDepthColor);
@@ -152,42 +152,38 @@ namespace Sharper
             }
             _spriteBatch.End();*/
             int pixelsPerSprite = _renderingSystem.SpriteAtlasSettings.pixelsPerSprite;
-            GraphicsDevice.SetRenderTarget(_gridEntitiesRenderTarget);
-            _spriteBatch.Begin(samplerState:SamplerState.PointClamp, transformMatrix: viewMatrix);
-                foreach(Entity x in _renderingSystem.GridEntities)
-                {
-                    Transform entityTransform = x.GetComponent<Transform>();
-                    EntityRenderer entityRenderer = x.GetComponent<EntityRenderer>();
-                    int row = entityRenderer.m_sprite.m_atlasX;
-                    int col = entityRenderer.m_sprite.m_atlasY;
-                    Color entityColor = entityRenderer.m_sprite.m_color; 
-                    Rectangle sourceRect = new Rectangle(pixelsPerSprite * col, pixelsPerSprite * row, pixelsPerSprite, pixelsPerSprite);
-                _spriteBatch.Draw(_renderingSystem.textureAtlas, new Vector2(entityTransform.position.X, entityTransform.position.Y),sourceRect,entityColor, 0, Vector2.Zero, 1f, SpriteEffects.None, 0f);
-                }
-            _spriteBatch.End();
             GraphicsDevice.SetRenderTarget(_worldEntitiesRenderTarget);
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: viewMatrix);
-            foreach (Entity x in _renderingSystem.WorldEntities)
+            foreach (Entity x in _renderingSystem.GetVisibleWorldEntities())
             {
                 Transform entityTransform = x.GetComponent<Transform>();
                 EntityRenderer entityRenderer = x.GetComponent<EntityRenderer>();
-                int row = entityRenderer.m_sprite.m_atlasX;
-                int col = entityRenderer.m_sprite.m_atlasY;
-                Color entityColor = entityRenderer.m_sprite.m_color;
-                Rectangle sourceRect = new Rectangle(pixelsPerSprite * col, pixelsPerSprite * row, pixelsPerSprite, pixelsPerSprite);
-                _spriteBatch.Draw(_renderingSystem.textureAtlas, new Vector2(entityTransform.position.X, entityTransform.position.Y), sourceRect, entityColor, 0, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                Sprite entitySprite = entityRenderer.m_sprite;
+                if (entitySprite.m_textureName == "")
+                {
+                    int row = entityRenderer.m_sprite.m_atlasX;
+                    int col = entityRenderer.m_sprite.m_atlasY;
+                    Color entityColor = entityRenderer.m_sprite.m_color;
+                    Rectangle sourceRect = new Rectangle(pixelsPerSprite * col, pixelsPerSprite * row, pixelsPerSprite, pixelsPerSprite);
+                    _spriteBatch.Draw(_renderingSystem.textureAtlas, new Vector2(entityTransform.position.X, entityTransform.position.Y), sourceRect, entityColor, 0, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                }
+                else
+                {
+                    Texture2D entityTex = ResourceManager.Instance.GetTexture(entitySprite.m_textureName);
+                    _spriteBatch.Draw(entityTex, entityRenderer.renderRectangle, entitySprite.m_color);
+                }
             }
             _spriteBatch.End();
             GraphicsDevice.SetRenderTarget(_guiRenderTarget);
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
-            foreach(Entity x in _renderingSystem.GUIEntities)
+            foreach(Entity x in _renderingSystem.GetGUIEntities())
             {
                 GUIRect rect = x.GetComponent<GUIRect>();
                 Sprite sprite = x.GetComponent<EntityRenderer>().m_sprite;
-                if (sprite.m_atlasX == -1)
+                if (sprite.m_textureName != "")
                 {
                     Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
-                    _spriteBatch.Draw(spriteTex, rect.GetRect(), new Rectangle(sprite.m_atlasX, sprite.m_atlasY, pps, pps), Color.White);
+                    _spriteBatch.Draw(spriteTex, rect.GetRect(), Color.White);
                 }
                 else
                 {
@@ -198,11 +194,11 @@ namespace Sharper
             _spriteBatch.End();
             GraphicsDevice.SetRenderTarget(_textRenderTarget);
             _spriteBatch.Begin();
-            foreach(Entity x in _renderingSystem.TextEntities)
+            foreach(Entity x in _renderingSystem.GetTextEntities())
             {
                 GUIRect textRect = x.GetComponent<GUIRect>();
-                string text = x.GetComponent<EntityRenderer>().textToRender.m_text;
-                Color color = x.GetComponent<EntityRenderer>().textToRender.m_color;
+                string text = x.GetComponent<GUIText>().m_text;
+                Color color = x.GetComponent<GUIText>().m_color;
                 _spriteBatch.DrawString(_defaultFont, text, textRect.GetPosition(), color);
             }
             _spriteBatch.End();

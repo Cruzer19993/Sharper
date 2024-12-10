@@ -10,20 +10,12 @@ namespace Sharper.Systems.Backend.GUI
     public class GUIEventSystem : ECSSystem
     {
         bool activatedInputBox = false;
-        GUIInputBox currentInputBox;
+        GUIText currentInputBoxText;
+        MatchingPattern GES_BTN_Pattern = new MatchingPattern(typeof(GUIRect),typeof(EntityRenderer) ,typeof(GUIButton));
+        MatchingPattern GES_IB_Pattern = new MatchingPattern(typeof(GUIRect),typeof(EntityRenderer), typeof(GUIInputBox), typeof(GUIText));
         public GUIEventSystem()
         {
             if (instance == null) instance = this;
-            getEntitesMatchingPartially = true;
-            matchingComponentTypes = new System.Type[]
-            {
-                typeof(GUIRect)
-            };
-            partialMatchingComponentTypes = new Type[]
-            {
-                typeof(GUIInputBox),
-                typeof(GUIButton)
-            };
         }
         private static GUIEventSystem instance;
         public static GUIEventSystem Instance
@@ -35,6 +27,7 @@ namespace Sharper.Systems.Backend.GUI
         public override void Initialize()
         {
             base.Initialize();
+            AddMatchingPatterns(GES_IB_Pattern, GES_BTN_Pattern);
         }
         //Runs once after Initialize
         public override void Start()
@@ -54,74 +47,79 @@ namespace Sharper.Systems.Backend.GUI
             {
                 if (InputSystem.KeyPressed(Keys.Back))
                 {
-                    if (currentInputBox.m_text.Length > 0)
+                    if (currentInputBoxText.m_text.Length > 0)
                     {
-                        string newText = currentInputBox.m_text.Remove(currentInputBox.m_text.Length - 1);
-                        currentInputBox.m_text = newText;
+                        string newText = currentInputBoxText.m_text.Remove(currentInputBoxText.m_text.Length - 1);
+                        currentInputBoxText.m_text = newText;
                     }
                 }
                 foreach (Keys key in Enum.GetValues(typeof(Keys)))
                 {
                     if (InputSystem.KeyPressed(key))
                     {
-                        currentInputBox.m_text += InputSystem.ConvertKeyEnumToChar(key, InputSystem.IsKeyDown(Keys.LeftShift));
-                        Debug.WriteLine($"CURRENT INPUT BOX TEXT: {currentInputBox.m_text}");
+                        currentInputBoxText.m_text += InputSystem.ConvertKeyEnumToChar(key, InputSystem.IsKeyDown(Keys.LeftShift));
+                        Debug.WriteLine($"CURRENT INPUT BOX TEXT: {currentInputBoxText.m_text}");
                     }
                 }
             }
         }
         //Applies changed to target entities
-        public override void EntityUpdate(Entity target)
+        public override void OnEntityUpdate(Entity target,MatchingPattern pattern)
         {
         }
-        public override void OnNewEntity(Entity newEntity)
+        public override void OnEntityAttached(Entity newEntity, MatchingPattern pattern)
         {
 
         }
+        public override void OnEntityDetached(Entity newEntity)
+        {
 
+        }
         public void CheckIfButtonClicked(MouseButton btn)
         {
+            if (!matchingEntities.ContainsKey(GES_BTN_Pattern)) return;
             Vector2 mousePos = InputSystem.MousePosition();
-            for (int i = 0; i < realArrayEntityCount; i++)
+            foreach(MatchingPattern pattern in matchingEntities.Keys)
             {
-                Entity currEntity = matchingEntities[i];
-                GUIRect btnRect = currEntity.GetComponent<GUIRect>();
-                if (btnRect != null)
+                for(int i=0;i < matchingEntities[pattern].Count; i++)
                 {
-                    Vector2 btnPos = btnRect.GetPosition();
-                    Vector2 btnSize = btnRect.GetSize();
-                    if (btnPos.X < mousePos.X &&
-                        btnPos.X + btnSize.X > mousePos.X &&
-                        btnPos.Y < mousePos.Y &&
-                        btnPos.Y + btnSize.Y > mousePos.Y)
+                    if(pattern.patternSignature == GES_BTN_Pattern.patternSignature)
                     {
-                        GUIButton btnComponent = currEntity.GetComponent<GUIButton>();
-                        if (btnComponent != null && btnComponent.activateButton == btn)
+                        GUIRect btnRect = matchingEntities[pattern][i].GetComponent<GUIRect>();
+                        GUIButton btnComponent = matchingEntities[pattern][i].GetComponent<GUIButton>();
+                        if (btnRect.GetRect().Contains(mousePos))
                         {
                             btnComponent.Clicked();
                             return;
                         }
-                        GUIInputBox inputBox = currEntity.GetComponent<GUIInputBox>();
-                        if (inputBox != null && btn == MouseButton.Left)
+                    }
+                    if(pattern.patternSignature == GES_IB_Pattern.patternSignature)
+                    {
+                        GUIRect ibRect = matchingEntities[pattern][i].GetComponent<GUIRect>();
+                        GUIText ibText = matchingEntities[pattern][i].GetComponent<GUIText>();
+                        GUIInputBox ibComp = matchingEntities[pattern][i].GetComponent<GUIInputBox>();
+
+                        if (ibRect.GetRect().Contains(mousePos))
                         {
-                            if(currentInputBox != null)
-                                currentInputBox.owner.GetComponent<EntityRenderer>().textToRender.m_color = Color.Black;
-                            currEntity.GetComponent<EntityRenderer>().textToRender.m_color = Color.Green;
-                            inputBox.m_active = true;
+                            if (currentInputBoxText != null)
+                                currentInputBoxText.m_color = Color.Black;
+                            ibText.m_color = Color.Green;
+                            ibComp.m_active = true;
                             activatedInputBox = true;
-                            currentInputBox = inputBox;
+                            currentInputBoxText = ibText;
                             return;
                         }
-                        Debug.WriteLine($"{currEntity.EntityName}");
+
                     }
                 }
             }
             if (activatedInputBox)
             {
-                currentInputBox.owner.GetComponent<EntityRenderer>().textToRender.m_color = Color.Black;
+                GUIInputBox ibComp = currentInputBoxText.owner.GetComponent<GUIInputBox>();
+                currentInputBoxText.m_color = Color.Black;
                 activatedInputBox = false;
-                currentInputBox.m_active = false;
-                currentInputBox = null;
+                ibComp.m_active = false;
+                currentInputBoxText = null;
             }
         }
     }

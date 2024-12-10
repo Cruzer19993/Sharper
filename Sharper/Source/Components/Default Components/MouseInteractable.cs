@@ -17,7 +17,6 @@ namespace Sharper.Components
             useOwnHitboxSize = false;
             renderHitboxOutline = false;
             hitboxSize = Vector2.Zero;
-            componentSignature.Set(5, true);
         }
         public MouseInteractable(bool useOwnHitbox = false, bool renderHitboxOutline = false)
         {
@@ -25,7 +24,6 @@ namespace Sharper.Components
             useOwnHitboxSize = useOwnHitbox;
             this.renderHitboxOutline = renderHitboxOutline;
             hitboxSize = Vector2.Zero;
-            componentSignature.Set(5, true);
         }
 
         public override void CopyComponentData(Component reference)

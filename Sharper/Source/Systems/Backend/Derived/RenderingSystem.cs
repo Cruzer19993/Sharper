@@ -10,6 +10,7 @@ using Sharper.Structures;
 using Sharper.Backend;
 using Sharper.Components.GUI;
 using System.Linq;
+using System.Collections;
 namespace Sharper.Systems.Backend
 {
     public class RenderingSystem : ECSSystem
@@ -26,44 +27,47 @@ namespace Sharper.Systems.Backend
             get { return instance; }
             private set { instance = value; }
         }
-        public Entity[] availableCameras;
+        public Entity[] availableCameras = new Entity[0];
         public int frustumCullingOffset = 8;
         public Camera currentCamera;
         public Transform currentCameraTransform;
-        public int RENDERING_SYSTEM_MINIMUM_STARTING_MATCHING_ENTITIES_SIZE = 1024;
         public Texture2D textureAtlas;
         public EntityManager currentLevelEntityManager;
-
+        private FrustumQuadTreeNode worldObjectsQuadTreeMainNode;
         private SpriteAtlasSettings atlasSettings = new SpriteAtlasSettings();
         private bool entitiesChanged = true;
-        private Entity[] gridEntities;
-        private Entity[] worldEntities;
-        private Entity[] gUIEntities;
-        private Entity[] textEntities;
         private Scene currentScene;
+        private MatchingPattern worldEntityPattern = new MatchingPattern(typeof(Transform),typeof(EntityRenderer));
+        private MatchingPattern GUIEntityPattern = new MatchingPattern(typeof(EntityRenderer),typeof(GUIRect));
+        private MatchingPattern TextEntityPattern = new MatchingPattern(typeof(GUIRect),typeof(GUIText));
 
-        public Entity[] GridEntities
-        {
-            get { return gridEntities; }
-            private set { gridEntities = value; }
-        }
-        public Entity[] WorldEntities
-        {
-            get { return worldEntities; }
-            private set { worldEntities = value; }
-        }
-        public Entity[] GUIEntities
-        {
-            get { return gUIEntities; }
-            private set { gUIEntities = value; }
-        }
-        public Entity[] TextEntities
-        {
-            get { return textEntities; }
-            private set { textEntities = value; }
-        }
 
         public SpriteAtlasSettings SpriteAtlasSettings { get { return atlasSettings; } set { atlasSettings = value; } }
+
+        public Entity[] GetVisibleWorldEntities()
+        {
+            if (!matchingEntities.ContainsKey(worldEntityPattern)) return new Entity[0];
+            if (matchingEntities[worldEntityPattern].Count <= 0) return new Entity[0];
+            List<int> visibleEntitiesIDs = new List<int>();
+            worldObjectsQuadTreeMainNode.Query(GetCameraFrustumRectangle(), visibleEntitiesIDs);
+            var idSet = new HashSet<int>(visibleEntitiesIDs); // Use HashSet for efficient lookups
+            Debug.WriteLine(visibleEntitiesIDs.Count);
+            return matchingEntities[worldEntityPattern].Where(entity => idSet.Contains(entity.entityID)).ToArray();
+        }
+
+        public Entity[] GetGUIEntities()
+        {
+            if (!matchingEntities.ContainsKey(GUIEntityPattern)) return new Entity[0];
+            if (matchingEntities[GUIEntityPattern].Count <= 0) return new Entity[0];
+            return matchingEntities[GUIEntityPattern].ToArray();
+        }
+
+        public Entity[] GetTextEntities()
+        {
+            if (!matchingEntities.ContainsKey(TextEntityPattern)) return new Entity[0];
+            if (matchingEntities[TextEntityPattern].Count <= 0) return new Entity[0];
+            return matchingEntities[TextEntityPattern].ToArray();
+        }
 
         public void SetRenderingSettings(SpriteAtlasSettings _atlasSettings)
         {
@@ -71,126 +75,28 @@ namespace Sharper.Systems.Backend
         }
         public override void Initialize()
         {
-
-            matchingComponentTypes = new Type[] { typeof(EntityRenderer) };
-            partialMatchingComponentTypes = new Type[] { typeof(GUIRect), typeof(Transform), typeof(GUIText) };
+            AddMatchingPatterns(worldEntityPattern, GUIEntityPattern, TextEntityPattern);
+            CreateMainFrustumNode((2048*SpriteAtlasSettings.pixelsPerSprite)); //4096x4096 tiles, so we have to multiply by pixels to get actual size.
             base.Initialize();
-            Entity[] resizeTemp = matchingEntities;
-            matchingEntities = new Entity[RENDERING_SYSTEM_MINIMUM_STARTING_MATCHING_ENTITIES_SIZE];
-            resizeTemp.CopyTo(matchingEntities, 0);
-            resizeTemp = null;
-            availableCameras = entityManager.GetEntitiesWithComponents(new Type[] { typeof(Camera), typeof(Transform) });
-            foreach (Entity camera in availableCameras)
-            {
-                if (camera.GetComponent<Camera>().isMainCamera)
-                {
-                    currentCamera = camera.GetComponent<Camera>();
-                    currentCameraTransform = camera.GetComponent<Transform>();
-                }
-            }
         }
-        public void UpdateGridEntities()
-        {
-            if (realArrayEntityCount <= 0) return;
-            if (!entitiesChanged) return;
-            Rectangle frustumRect = GetCameraFrustumRectangle();
-            Chunk[] gridChunks = currentScene.entityChunks.ToArray();
-            List<Entity> visibleEntities = new List<Entity>();
-            int pps = atlasSettings.pixelsPerSprite;
-            foreach (Chunk chunk in gridChunks) //check surface chunks
-            {
-                //surface level checks
-                Rectangle surfaceChunkRect = chunk.GetChunkRect(); //fully visible
-                if (frustumRect.Contains(surfaceChunkRect))
-                {
-                    visibleEntities.AddRange(chunk.chunkEntities.Values);
-                }
-                else if (frustumRect.Intersects(surfaceChunkRect)) //intersects.
-                {
-                    bool checkEntitiesOnFinalDepth = false;
-                    for (int i = 1; i < chunk.nodeDepth; i++)
-                    {
-                        Chunk[] deeperChunks = chunk.GetNodesAtLevel(i);
-                        foreach (Chunk deeperChunk in deeperChunks)
-                        {
-                            Rectangle deeperChunkRect = deeperChunk.GetChunkRect();
-                            if (frustumRect.Contains(deeperChunkRect))//fully visible
-                            {
-                                visibleEntities.AddRange(deeperChunk.chunkEntities.Values);
-                            }
-                            if (frustumRect.Intersects(deeperChunkRect)) //partially visible
-                            {
-                                if (i == chunk.nodeDepth - 1)
-                                {
-                                    checkEntitiesOnFinalDepth = true;
-                                }
-                                else continue;
-                            }
-                            else continue;//not visible
-                        }
-                    }
-                    if (checkEntitiesOnFinalDepth)
-                    {
-                        Chunk[] finalChunks = chunk.GetNodesAtLevel(chunk.nodeDepth);
-                        foreach (Chunk finalChunk in finalChunks)
-                        {
-                            foreach (Entity entity in finalChunk.chunkEntities.Values)
-                            {
-                                Transform entityTransform = entity.GetComponent<Transform>();
-                                Rectangle entityRect = new Rectangle((int)entityTransform.position.X, (int)entityTransform.position.Y, pps, pps);
-                                if (frustumRect.Intersects(entityRect)) //check if entity is visible
-                                {
-                                    visibleEntities.Add(entity);
-                                }
-                            }
-                        }
-                        checkEntitiesOnFinalDepth = false;
-                    }
-                }
-                else continue; //not visible
-            }
-            GridEntities = visibleEntities.ToArray();
-        }
-        public void UpdateWorldEntites()
-        {
-            if (realArrayEntityCount <= 0) return;
-            worldEntities = matchingEntities.ToList<Entity>().FindAll(x => x.GetComponent<EntityRenderer>().m_renderTarget == RenderTarget.WorldSpace).ToArray();
-        }
-        public void UpdateGUIEntities()
-        {
-            if (realArrayEntityCount <= 0) return;
-            gUIEntities = matchingEntities.ToList<Entity>().FindAll(x => x.GetComponent<EntityRenderer>().m_renderTarget == RenderTarget.GUI).ToArray();
-        }
-        public void UpdateTextEntities()
-        {
-            if (realArrayEntityCount <= 0) return;
-            textEntities = matchingEntities.ToList<Entity>().FindAll(x => x.GetComponent<EntityRenderer>().m_renderTarget == RenderTarget.Text).ToArray();
-        }
-        public override void OnNewEntity(Entity newEntity)
-        {
-            RenderTarget entityRenderTarget = newEntity.GetComponent<EntityRenderer>().m_renderTarget;
-            // Get the position of the new entity
-            Transform transform = newEntity.GetComponent<Transform>();
-            switch (entityRenderTarget) {
-                case RenderTarget.GridSpace:
-                Vector2 position = new Vector2(transform.Position.X, transform.Position.Y);
 
-                // Find the surface chunk that contains the entity's position
-                Chunk surfaceChunk = currentScene.entityChunks.Find(chunk => chunk.GetChunkRect().Contains(position));
-
-                // Add the new entity to the surface chunk
-                surfaceChunk.AddEntity(ref newEntity);
-                    UpdateGridEntities();
-                    break;
-                case RenderTarget.WorldSpace:
-                    UpdateWorldEntites();
-                    break;
-                case RenderTarget.GUI:
-                    UpdateGUIEntities();
-                    break;
-                case RenderTarget.Text:
-                    UpdateTextEntities();
-                    break;
+        private void CreateMainFrustumNode(int size)
+        {
+            int posX = size / 2;
+            int posY = size / 2;
+            worldObjectsQuadTreeMainNode = new FrustumQuadTreeNode(new Rectangle(-posX, -posY, size, size), 1, 8);
+        }
+        public override void OnEntityAttached(Entity newEntity,MatchingPattern pattern)
+        {
+            if(pattern.patternSignature == worldEntityPattern.patternSignature)
+            {
+                Transform transform = newEntity.GetComponent<Transform>();
+                EntityRenderer rend = newEntity.GetComponent<EntityRenderer>();
+                if(rend.renderRectangle == Rectangle.Empty)
+                {
+                    rend.renderRectangle = new Rectangle((int)transform.position.X, (int)transform.position.Y, rend.rectWidth, rend.rectHeight);
+                }
+                worldObjectsQuadTreeMainNode.Insert(rend.renderRectangle, newEntity.entityID);
             }
         }
         public void CheckForCameras()
@@ -213,19 +119,17 @@ namespace Sharper.Systems.Backend
         {
             currentScene = args.argScene;
             entityManager = currentScene.entityManager;
+            CheckForCameras();
         }
 
-        private void OnEntityChanged(object sender, EventArgs args)
+        public override void OnEntityDetached(Entity target)
         {
-            UpdateGridEntities();
-            UpdateWorldEntites();
-            UpdateGUIEntities();
-            UpdateTextEntities();
+
         }
         public override void GameUpdate()
         {
         }
-        public override void EntityUpdate(Entity target)
+        public override void OnEntityUpdate(Entity target, MatchingPattern pattern)
         {
 
         }
@@ -256,21 +160,6 @@ namespace Sharper.Systems.Backend
         }
         public Camera newCamera;
         public Entity newCameraEntity;
-    }
-
-    public struct CachedEntity
-    {
-        public CachedEntity(ref Entity _entity, ref Transform _transform, ref EntityRenderer _renderer, ref Sprite _sprite)
-        {
-            entity = _entity;
-            entityTransform = _transform;
-            entityRenderer = _renderer;
-            entitySprite = _sprite;
-        }
-        public Entity entity;
-        public Transform entityTransform;
-        public EntityRenderer entityRenderer;
-        public Sprite entitySprite;
     }
     public struct SpriteAtlasSettings
     {

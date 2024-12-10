@@ -5,6 +5,11 @@ namespace Sharper.Components.GUI
 {
     public class GUIText : Component
     {
+        public GUIText() {
+            m_text = "";
+            m_fontSize = 12;
+            m_color = Color.White;
+        }
         public GUIText(string text = "", int fontSize = 12) 
         {
             m_text = "";

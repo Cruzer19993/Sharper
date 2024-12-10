@@ -19,14 +19,10 @@ namespace Sharper
         Camera currentCamera;
         bool resetCameraToCenter;
         //Runs only once before Start
+        MatchingPattern LECMPattern = new MatchingPattern(typeof(Transform), typeof(Camera), typeof(SimpleMover));
         public override void Initialize()
         {
-            matchingComponentTypes = new System.Type[]
-            {
-                        typeof(Transform),
-                        typeof(Camera),
-                        typeof(SimpleMover)
-            };
+            AddMatchingPatterns(LECMPattern);
             base.Initialize();
             RenderingSystem.CameraChangedEvent += CameraZoomChanged;
         }
@@ -64,7 +60,7 @@ namespace Sharper
             }
         }
         //Applies changed to target entities
-        public override void EntityUpdate(Entity target)
+        public override void OnEntityUpdate(Entity target, MatchingPattern pattern)
         {
             if (lastMousePos == currentMousePos)
             {
@@ -90,6 +86,15 @@ namespace Sharper
             }
         }
 
+        public override void OnEntityAttached(Entity target, MatchingPattern pattern)
+        {
+            
+        }
+
+        public override void OnEntityDetached(Entity target)
+        {
+            
+        }
         public void CameraZoomChanged(object sender, CameraChangedEventArgs args)
         {
             currentCamera = args.newCamera;

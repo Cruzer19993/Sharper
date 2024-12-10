@@ -12,7 +12,6 @@ namespace Sharper.Components
     {
         public Collider()
         {
-            componentSignature.Set(4, true);
         }
         protected Vector2 size;
         

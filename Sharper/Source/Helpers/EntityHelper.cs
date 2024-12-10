@@ -33,6 +33,8 @@ namespace Sharper.Helpers
             spriteRenderer.m_sprite.m_atlasX = 0;
             spriteRenderer.m_sprite.m_atlasY = 1;
             spriteRenderer.m_sprite.m_color = Color.White;
+            spriteRenderer.rectWidth = 16;
+            spriteRenderer.rectHeight = 16;
             gridTile.GetComponent<Transform>().position = position;
             return gridTile;
         }

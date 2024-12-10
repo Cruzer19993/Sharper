@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Sharper.Components.GUI;
+using Sharper.Systems.Backend;
 using System.Collections.Generic;
 
 namespace Sharper.ECS
@@ -9,9 +10,9 @@ namespace Sharper.ECS
         public EntityRenderer() 
         {
             m_sprite = new Sprite();
-            textToRender = null;
-            m_renderTarget = RenderTarget.GridSpace;
             m_allowRendering = true;
+            rectHeight = RenderingSystem.Instance.SpriteAtlasSettings.pixelsPerSprite;
+            rectWidth = RenderingSystem.Instance.SpriteAtlasSettings.pixelsPerSprite;
         }
         public EntityRenderer(EntityRenderer other)
         {
@@ -19,16 +20,17 @@ namespace Sharper.ECS
             m_sprite.m_atlasX = other.m_sprite.m_atlasX;
         }
 
-        public EntityRenderer(string textureName = "",RenderTarget target = RenderTarget.GridSpace, bool allowRendering = true)
+        public EntityRenderer(int rectWidth, int rectHeight, string textureName = "", bool allowRendering = true)
         {
             m_sprite = new Sprite(0, 0);
-            m_renderTarget = target;
             allowRendering = true;
+            this.rectHeight = rectHeight;
+            this.rectWidth = rectWidth;
         }
-        public GUIText textToRender;
+        public int rectHeight, rectWidth;
         public Sprite m_sprite;
-        public RenderTarget m_renderTarget;
         public bool m_allowRendering;
+        public Rectangle renderRectangle;
         public override void CopyComponentData(Component reference)
         {
             if (reference is EntityRenderer rend)
@@ -46,6 +48,7 @@ namespace Sharper.ECS
             m_atlasX = x;
             m_atlasY = y;
             this.m_color = Color.White;
+            m_textureName = "";
         }
 
         public Sprite(int x, int y, Color color)
@@ -53,6 +56,7 @@ namespace Sharper.ECS
             m_atlasX = x;
             m_atlasY = y;
             this.m_color = color;
+            m_textureName = "";
         }
         public Sprite(string textureName,Color color)
         {
@@ -64,12 +68,5 @@ namespace Sharper.ECS
         public int m_atlasX, m_atlasY;
         public Color m_color;
         public string m_textureName;
-    }
-    public enum RenderTarget
-    {
-        GridSpace, //tiles of the world etc
-        WorldSpace, //dynamic objects like players, projectiles etc
-        GUI, //GUI elements
-        Text //text
     }
 }

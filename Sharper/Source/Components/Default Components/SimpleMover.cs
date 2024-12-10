@@ -12,7 +12,6 @@ namespace Sharper.ECS
         public SimpleMover()
         {
             movementSpeed = 5;
-            componentSignature.Set(6, true);
         }
         public float movementSpeed;
     }

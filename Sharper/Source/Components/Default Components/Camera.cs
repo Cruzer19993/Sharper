@@ -13,7 +13,6 @@ namespace Sharper.Components
         {
             isMainCamera = false;
             cameraZoom = 2f;
-            componentSignature.Set(3, true);
         }
         public bool isMainCamera;
         public float cameraZoom;

@@ -16,6 +16,7 @@ namespace Sharper.Systems.Backend
         private static MouseEntityInteractionSystem instance;
         private Transform currentCameraTransform;
         private Camera currentCamera;
+        private MatchingPattern MEISPattern = new MatchingPattern(typeof(Transform),typeof(MouseInteractable));
         public MouseEntityInteractionSystem() : base() 
         {
             if(instance == null)
@@ -33,12 +34,13 @@ namespace Sharper.Systems.Backend
         public EventHandler<EntityClickedEventArgs> EntityClicked;
         public override void Initialize()
         {
-            matchingComponentTypes = new Type[] { typeof(Transform), typeof(MouseInteractable)};
+            AddMatchingPatterns(MEISPattern);
             base.Initialize();
             RenderingSystem.CameraChangedEvent += OnCameraChange;
         }
         public Entity GetEntityUnderCursor()
         {
+            if (!matchingEntities.ContainsKey(MEISPattern)) return null;
             if (currentCamera == null) return null;
             /* mousepos = resolution
              * gamepos = resolution/pps
@@ -52,20 +54,20 @@ namespace Sharper.Systems.Backend
             Vector2 absoluteCursorPosition = currentMousePos + new Vector2(currentCameraTransform.position.X,currentCameraTransform.position.Y);
             absoluteCursorPosition *= (1 / cameraZoomLevel);
             Entity entityUnderCursor = null;
-            for (int i = 0; i < realArrayEntityCount; i++)
+            for (int i = 0; i < matchingEntities[MEISPattern].Count; i++)
             {
-                MouseInteractable entityInteractableComponent = matchingEntities[i].GetComponent<MouseInteractable>();
+                MouseInteractable entityInteractableComponent = matchingEntities[MEISPattern][i].GetComponent<MouseInteractable>();
                 bool entityUsingOwnHitbox = entityInteractableComponent.useOwnHitboxSize;
                 float hitboxWidth = entityUsingOwnHitbox ? entityInteractableComponent.hitboxSize.X : pixelsPerSprite;
                 float hitboxHeight = entityUsingOwnHitbox ? entityInteractableComponent.hitboxSize.Y : pixelsPerSprite;
-                Vector3 entityPos = matchingEntities[i].GetComponent<Transform>().Position;
+                Vector3 entityPos = matchingEntities[MEISPattern][i].GetComponent<Transform>().Position;
                 if (entityPos.X < absoluteCursorPosition.X &&
                     entityPos.X + hitboxWidth > absoluteCursorPosition.X &&
                     entityPos.Y < absoluteCursorPosition.Y &&
                     entityPos.Y + hitboxHeight > absoluteCursorPosition.Y)
                 {
                     Debug.WriteLine(entityPos);
-                    entityUnderCursor = matchingEntities[i];
+                    entityUnderCursor = matchingEntities[MEISPattern][i];
                 }
             }
             return entityUnderCursor;
@@ -94,8 +96,18 @@ namespace Sharper.Systems.Backend
             }
         }
 
-        public override void EntityUpdate(Entity target)
+        public override void OnEntityUpdate(Entity target,MatchingPattern pattern)
         {
+        }
+
+        public override void OnEntityAttached(Entity target, MatchingPattern pattern)
+        {
+            
+        }
+
+        public override void OnEntityDetached(Entity target)
+        {
+            
         }
 
         public override void Start()

@@ -10,7 +10,6 @@ namespace Sharper.Components.GUI
         public GUIButton()
         {
             activateButton = MouseButton.Left;
-            componentSignature.Set(9, true);
         }
         public Timer clickAnimTimer;
         public event EventHandler OnClick;
