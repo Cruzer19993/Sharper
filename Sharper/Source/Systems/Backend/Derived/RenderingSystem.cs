@@ -38,10 +38,8 @@ namespace Sharper.Systems.Backend
         private bool entitiesChanged = true;
         private Scene currentScene;
         private MatchingPattern worldEntityPattern = new MatchingPattern(typeof(Transform),typeof(EntityRenderer));
-        private MatchingPattern GUIEntityPattern = new MatchingPattern(typeof(EntityRenderer),typeof(GUIRect));
+        private MatchingPattern GUIEntityPattern = new MatchingPattern(typeof(GUIRect),typeof(GUISprite));
         private MatchingPattern TextEntityPattern = new MatchingPattern(typeof(GUIRect),typeof(GUIText));
-
-
         public SpriteAtlasSettings SpriteAtlasSettings { get { return atlasSettings; } set { atlasSettings = value; } }
 
         public Entity[] GetVisibleWorldEntities()

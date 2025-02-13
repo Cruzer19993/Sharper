@@ -2,6 +2,7 @@
 using Sharper.ECS;
 using System;
 using Microsoft.Xna.Framework;
+using Sharper.Systems.Backend.Management;
 
 namespace Sharper.Helpers
 {
@@ -30,12 +31,14 @@ namespace Sharper.Helpers
         {
             Entity gridTile = new Entity("Grid Tile", new Type[] { typeof(Transform), typeof(MouseInteractable), typeof(EntityRenderer) });
             EntityRenderer spriteRenderer = gridTile.GetComponent<EntityRenderer>();
-            spriteRenderer.m_sprite.m_atlasX = 0;
-            spriteRenderer.m_sprite.m_atlasY = 1;
-            spriteRenderer.m_sprite.m_color = Color.White;
+            spriteRenderer.m_sprite.m_textureName = "GUIRectangleHR";
             spriteRenderer.rectWidth = 16;
             spriteRenderer.rectHeight = 16;
             gridTile.GetComponent<Transform>().position = position;
+            if (SceneManager.CurrentScene != null)
+            {
+                SceneManager.CurrentScene.SpawnEntity(gridTile);
+            }
             return gridTile;
         }
     }

@@ -11,8 +11,8 @@ namespace Sharper.Systems.Backend.GUI
     {
         bool activatedInputBox = false;
         GUIText currentInputBoxText;
-        MatchingPattern GES_BTN_Pattern = new MatchingPattern(typeof(GUIRect),typeof(EntityRenderer) ,typeof(GUIButton));
-        MatchingPattern GES_IB_Pattern = new MatchingPattern(typeof(GUIRect),typeof(EntityRenderer), typeof(GUIInputBox), typeof(GUIText));
+        MatchingPattern GES_BTN_Pattern = new MatchingPattern(typeof(GUIRect),typeof(GUIButton));
+        MatchingPattern GES_IB_Pattern = new MatchingPattern(typeof(GUIRect), typeof(GUIInputBox), typeof(GUIText));
         public GUIEventSystem()
         {
             if (instance == null) instance = this;

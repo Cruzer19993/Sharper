@@ -27,11 +27,14 @@ namespace Sharper.Components.GUI
             m_size = Vector2.Zero;
             m_Position = Vector2.Zero;
             m_scale = Vector2.One;
+            m_isManaged = false;
+            m_rectManager = null;
         }
         protected Vector2 m_scale;
         protected Vector2 m_size;
         protected Vector2 m_Position;
         public bool m_isManaged;
+        public GUILayout m_rectManager;
         public Rectangle GetRect()
         {
             return new Rectangle((int)m_Position.X,(int)m_Position.Y,(int)m_size.X,(int)m_size.Y);

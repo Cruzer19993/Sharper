@@ -5,31 +5,37 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Sharper.Components.GUI
 {
     public class GUISprite : Component
     {
-        public GUISprite(int atlasX, int atlasY)
+        public GUISprite(string textureName, Color color)
         {
-            m_textureName = "atlas";
-            m_atlasX = atlasX;
-            m_atlasY = atlasY;
+            m_sprite.m_textureName = textureName;
+            m_sprite.m_color = color;
         }
-        public GUISprite(string textureName)
+        public GUISprite(int atlasX, int atlasY, Color color)
         {
-            m_textureName = textureName;
+            m_sprite.m_atlasX = atlasX;
+            m_sprite.m_atlasY = atlasY;
+            m_sprite.m_color = color;
+        }
+        public GUISprite(Sprite sprite)
+        {
+            m_sprite = sprite;
         }
 
         public GUISprite()
         {
-            m_textureName = "GUIDefaultTexture";
-            m_atlasX = -1;
-            m_atlasY = -1;
+            m_sprite = new Sprite();
+            m_sprite.m_textureName = "GUIRectangleHR";
+            m_sprite.m_color = Color.Black;
+
         }
 
-        public string m_textureName;
-        public int m_atlasX;
-        public int m_atlasY;
+        public Sprite m_sprite;
     }
 }

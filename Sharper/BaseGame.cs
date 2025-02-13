@@ -30,7 +30,6 @@ namespace Sharper
         protected SpriteFont _defaultFont;
         protected Vector2 viewportCenter;
         protected bool useTestScene = false;
-        protected RenderTarget2D _gridEntitiesRenderTarget;
         protected RenderTarget2D _worldEntitiesRenderTarget;
         protected RenderTarget2D _guiRenderTarget;
         protected RenderTarget2D _textRenderTarget;
@@ -124,7 +123,7 @@ namespace Sharper
             Transform cameraTransform = _renderingSystem.currentCameraTransform;
             viewMatrix *= Matrix.CreateTranslation(-cameraTransform.Position.X, -cameraTransform.Position.Y, 0);
             int pps = _renderingSystem.SpriteAtlasSettings.pixelsPerSprite;
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(Color.Violet);
             //Render chunk borders.
             /*_spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: viewMatrix);
             Rectangle _gridSourceRect = new Rectangle(0, 0, pps, pps);
@@ -159,6 +158,7 @@ namespace Sharper
                 Transform entityTransform = x.GetComponent<Transform>();
                 EntityRenderer entityRenderer = x.GetComponent<EntityRenderer>();
                 Sprite entitySprite = entityRenderer.m_sprite;
+                if (entityRenderer.m_allowRendering == false) continue;
                 if (entitySprite.m_textureName == "")
                 {
                     int row = entityRenderer.m_sprite.m_atlasX;
@@ -179,7 +179,7 @@ namespace Sharper
             foreach(Entity x in _renderingSystem.GetGUIEntities())
             {
                 GUIRect rect = x.GetComponent<GUIRect>();
-                Sprite sprite = x.GetComponent<EntityRenderer>().m_sprite;
+                Sprite sprite = x.GetComponent<GUISprite>().m_sprite;
                 if (sprite.m_textureName != "")
                 {
                     Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
