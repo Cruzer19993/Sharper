@@ -47,5 +47,6 @@ namespace Sharper.Components.GUI
         SNAP_RIGHT,
         SNAP_TOP,
         SNAP_BOTTOM,
+        RESIZE_TO_CONTENT
     }
 }

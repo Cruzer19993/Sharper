@@ -2,6 +2,7 @@
 using Sharper.Components.GUI;
 using Sharper.ECS;
 using Sharper.Systems.Backend.Management;
+using Sharper.Systems.Backend.Standalone;
 using System;
 namespace Sharper.Source.Helpers
 {
@@ -9,11 +10,10 @@ namespace Sharper.Source.Helpers
     {
         public static Entity CreateLayout(Vector2 layoutSize, Vector2 contentSpacing, out GUILayout layout, params GUILayoutOptions[] options)
         {
-            Entity layoutEntity = new Entity("GUILayout", new Type[] { typeof(GUIRect), typeof(GUILayout), typeof(GUISprite) });
+            Entity layoutEntity = new Entity("GUILayout", new Type[] { typeof(GUIRect), typeof(GUILayout) });
             layoutEntity.GetComponent<GUILayout>().m_spacing = contentSpacing;
             layoutEntity.GetComponent<GUILayout>().m_options = options;
             layoutEntity.GetComponent<GUIRect>().m_size = layoutSize;
-            layoutEntity.GetComponent<GUISprite>().m_uiSprite.m_textureName = "GUIRectangleHR";
             layout = layoutEntity.GetComponent<GUILayout>();
             if (SceneManager.CurrentScene != null)
             {
@@ -93,6 +93,28 @@ namespace Sharper.Source.Helpers
                 SceneManager.CurrentScene.SpawnEntity(imageEntity);
             }
             return imageEntity;
+        }
+
+        public static Entity CreateInputBox(string initialValue,out GUIInputBox inputBox)
+        {
+            Entity inputBoxEntity = new Entity("UIInputBox", new Type[] { typeof(GUIRect), typeof(GUISprite), typeof(GUIInputBox),typeof(GUILayout)});
+            GUILayout ibLayout = inputBoxEntity.GetComponent<GUILayout>();
+            ibLayout.m_options = new GUILayoutOptions[] {GUILayoutOptions.CONTENT_CENTER };
+            inputBoxEntity.GetComponent<GUISprite>().m_uiSprite = new Sprite("GUIRectangle", Color.White);
+            Entity inputBoxTextEntity = new Entity("UIInputBoxText", new Type[] { typeof(GUIRect), typeof(GUIText) });
+            inputBoxTextEntity.GetComponent<GUIText>().Text = initialValue;
+            inputBoxTextEntity.GetComponent<GUIText>().m_color = Color.Black;
+            GUIInputBox ibcomp = inputBoxEntity.GetComponent<GUIInputBox>();
+            ibcomp.m_inputBoxTextDisplay = inputBoxTextEntity.GetComponent<GUIText>();
+            inputBoxEntity.GetComponent<GUIRect>().m_size = inputBoxTextEntity.GetComponent<GUIRect>().m_size+Vector2.One*4+Vector2.UnitX*12;
+            inputBox = ibcomp;
+            GUILayoutManager.AddContent(ibLayout, inputBoxTextEntity.GetComponent<GUIRect>());
+            if (SceneManager.CurrentScene != null)
+            {
+                SceneManager.CurrentScene.SpawnEntity(inputBoxEntity);
+                SceneManager.CurrentScene.SpawnEntity(inputBoxTextEntity);
+            }
+            return inputBoxEntity;
         }
     }
 }

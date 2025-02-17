@@ -14,16 +14,16 @@ namespace Sharper.Systems
         {
             neededTypes = patternTypes;
             Random rand = new Random();
-            patternSignature = (uint)1 << rand.Next(1, 32);
+            patternSignature = string.Join(",",patternTypes.Select(x => x.FullName)).GetHashCode();
         }
         public MatchingPattern()
         {
             neededTypes = new Type[0];
             Random rand = new Random();
-            patternSignature = (uint)1 << rand.Next(1, 32);
+            patternSignature = -1;
         }
         public Type[] neededTypes;
-        public uint patternSignature;
+        public int patternSignature;
     }
 
     public abstract class ECSSystem

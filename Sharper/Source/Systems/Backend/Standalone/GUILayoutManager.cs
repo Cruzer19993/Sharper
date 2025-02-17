@@ -79,7 +79,7 @@ namespace Sharper.Systems.Backend.Standalone
 
         public static void ResizeText(GUIRect rect,string textString)
         {
-            rect.m_size = new Vector2(Math.Max(40, ResourceManager.Instance.GetDefaultFont().MeasureString(textString).X+2), 20);
+            rect.m_size = new Vector2(Math.Max(0, ResourceManager.Instance.GetDefaultFont().MeasureString(textString).X+2), 20);
         }
         public static void RootLayout(GUILayout rootLayout, GUILayout branchLayout)
         {

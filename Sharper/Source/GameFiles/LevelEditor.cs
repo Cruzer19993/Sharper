@@ -67,6 +67,10 @@ namespace Sharper.GameFiles
             GUILayoutManager.RootLayout(leftSideLayoutGroup,testLayout);
             GUILayoutManager.AddContent(testLayout, GUIHelper.CreateText("Text 1").GetComponent<GUIRect>());
             GUILayoutManager.AddContent(testLayout, GUIHelper.CreateText("Text 2").GetComponent<GUIRect>());
+            GUILayoutManager.AddContent(leftSideLayoutGroup, GUIHelper.CreateImage(Vector2.Zero, new Sprite(1, 1), out GUISprite sprite).GetComponent<GUIRect>());
+            GUIHelper.CreateInputBox("12345678", out GUIInputBox ib1).GetComponent<GUIRect>();
+            GUILayoutManager.RootLayout(leftSideLayoutGroup,ib1.owner.GetComponent<GUILayout>());
+            GUILayoutManager.AddContent(leftSideLayoutGroup, ib1.owner.GetComponent<GUIRect>());
             
         }
 

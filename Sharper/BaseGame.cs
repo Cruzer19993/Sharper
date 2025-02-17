@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.IO;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
+using Sharper.Systems.Backend.Derived;
 namespace Sharper
 {
     public class BaseGame : Game
@@ -25,7 +26,7 @@ namespace Sharper
         protected RenderingSystem _renderingSystem = new RenderingSystem();
         protected InputSystem _inputSystem = new InputSystem();
         protected ResourceManager _resourceManager = new ResourceManager();
-        protected MouseEntityInteractionSystem _mouseInteractionSystem = new MouseEntityInteractionSystem();
+        protected GUIEventSystem _gUIeventSystem = new GUIEventSystem();
         protected SpriteFont _defaultFont;
         protected Vector2 viewportCenter;
         protected bool useTestScene = false;
@@ -65,7 +66,7 @@ namespace Sharper
         //Derived systems are systems that work with entites of the current level.
         public void AttachDerivedBackendSystems(object sender, SceneEventArgs args)
         {
-            args.argScene.systemManager.AttachSystem(_mouseInteractionSystem);
+            args.argScene.systemManager.AttachSystem(_gUIeventSystem);
             args.argScene.systemManager.AttachSystem(_renderingSystem);
             Debug.WriteLine("[INFO]Attached derived backend systems.");
         }
@@ -183,7 +184,7 @@ namespace Sharper
                 if (sprite.m_textureName != "")
                 {
                     Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
-                    _spriteBatch.Draw(spriteTex, rect.GetRect(), Color.White);
+                    _spriteBatch.Draw(spriteTex, rect.GetRect(), sprite.m_color);
                 }
                 else
                 {
