@@ -1,67 +1,23 @@
 ﻿using Microsoft.Xna.Framework;
 using Sharper.ECS;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Sharper.Components.GUI
 {
     public class GUIRect : Component
     {
-        public GUIRect(Vector2 position, Vector2 size, Vector2 scale)
-        {
-            m_Position = position;
-            m_size = size;
-            m_scale = scale;
-        }
-        public GUIRect(Vector2 position, Vector2 size)
-        {
-            m_size = size;
-            m_Position = position;
-            m_scale = Vector2.One;
-        }
+        public Vector2 m_size;
+        public Vector2 m_position;
+        public Quaternion m_rotation;
         public GUIRect()
         {
-            m_size = Vector2.Zero;
-            m_Position = Vector2.Zero;
-            m_scale = Vector2.One;
-            m_isManaged = false;
-            m_rectManager = null;
+            m_size = Vector2.One*16f;
+            m_position = Vector2.Zero;
+            m_rotation = Quaternion.Identity;
         }
-        protected Vector2 m_scale;
-        protected Vector2 m_size;
-        protected Vector2 m_Position;
-        public bool m_isManaged;
-        public GUILayout m_rectManager;
+
         public Rectangle GetRect()
         {
-            return new Rectangle((int)m_Position.X,(int)m_Position.Y,(int)m_size.X,(int)m_size.Y);
-        }
-        public Vector2 GetScale()
-        {
-            return m_scale;
-        }
-        public Vector2 GetPosition()
-        {
-            return m_Position;
-        }
-        public Vector2 GetSize()
-        {
-            return m_size;
-        }
-        public void SetPosition(Vector2 newPosition)
-        {
-            m_Position = newPosition;
-        }
-        public void SetScale(Vector2 newScale)
-        {
-            m_scale = newScale;
-        }
-        public void SetSize(Vector2 newSize)
-        {
-            m_size = newSize;
+            return new Rectangle((int)m_position.X, (int)m_position.Y, (int)m_size.X,(int)m_size.Y);
         }
     }
 }

@@ -6,7 +6,7 @@ using Sharper.ECS;
 using Sharper.Helpers;
 using Sharper.Structures;
 using Sharper.Systems.Backend;
-using Sharper.Systems.Backend.GUI;
+using Sharper.Systems.Backend.Standalone;
 using Sharper.Systems.Backend.Management;
 using Sharper.Systems.GameSystems;
 using System;
@@ -26,7 +26,6 @@ namespace Sharper
         protected InputSystem _inputSystem = new InputSystem();
         protected ResourceManager _resourceManager = new ResourceManager();
         protected MouseEntityInteractionSystem _mouseInteractionSystem = new MouseEntityInteractionSystem();
-        protected GUIEventSystem _guiEventSystem = new GUIEventSystem();
         protected SpriteFont _defaultFont;
         protected Vector2 viewportCenter;
         protected bool useTestScene = false;
@@ -68,7 +67,6 @@ namespace Sharper
         {
             args.argScene.systemManager.AttachSystem(_mouseInteractionSystem);
             args.argScene.systemManager.AttachSystem(_renderingSystem);
-            args.argScene.systemManager.AttachSystem(_guiEventSystem);
             Debug.WriteLine("[INFO]Attached derived backend systems.");
         }
         protected virtual void OnSceneLoad(object sender, SceneEventArgs args)
@@ -91,7 +89,9 @@ namespace Sharper
                 Texture2D loadedTexture = Content.Load<Texture2D>($"Textures\\{pureFileName}");
                 _resourceManager.LoadTexture(pureFileName, loadedTexture);
             }
-            _defaultFont = Content.Load<SpriteFont>("defaultFont");
+            SpriteFont defaultFont = Content.Load<SpriteFont>("defaultFont");
+            ResourceManager.Instance.SetDefaultFont(defaultFont);
+            _defaultFont = defaultFont;
             Debug.WriteLine($"[INFO] {textureFiles.Length} Textures loaded into resource manager successfully.");
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             //load the m_sprite atlas texture
@@ -179,7 +179,7 @@ namespace Sharper
             foreach(Entity x in _renderingSystem.GetGUIEntities())
             {
                 GUIRect rect = x.GetComponent<GUIRect>();
-                Sprite sprite = x.GetComponent<GUISprite>().m_sprite;
+                Sprite sprite = x.GetComponent<GUISprite>().m_uiSprite;
                 if (sprite.m_textureName != "")
                 {
                     Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
@@ -197,9 +197,10 @@ namespace Sharper
             foreach(Entity x in _renderingSystem.GetTextEntities())
             {
                 GUIRect textRect = x.GetComponent<GUIRect>();
-                string text = x.GetComponent<GUIText>().m_text;
+                string text = x.GetComponent<GUIText>().Text;
                 Color color = x.GetComponent<GUIText>().m_color;
-                _spriteBatch.DrawString(_defaultFont, text, textRect.GetPosition(), color);
+                float textScale = x.GetComponent<GUIText>().m_scale;
+                _spriteBatch.DrawString(_defaultFont, text, textRect.m_position, color);
             }
             _spriteBatch.End();
             base.Draw(gameTime);

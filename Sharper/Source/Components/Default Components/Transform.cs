@@ -56,7 +56,10 @@ namespace Sharper.ECS
                 this.lastPosition = t.lastPosition;
             }
         }
-
+        public void ClearParent()
+        {
+            this.parent = null;
+        } 
         public void SetParent(Transform parent)
         {
             this.parent = parent;

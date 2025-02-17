@@ -1,97 +1,97 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sharper.Components.GUI;
-using Sharper.Systems.Backend;
-using System;
-using System.Linq;
-namespace Sharper.Backend.Standalone
-{
-    //manages GUIRect positions and sizes for layout groups
-    public class GUILayoutManager
+using Sharper.Systems.Backend.Management;
+namespace Sharper.Systems.Backend.Standalone
+{   
+    static public class GUILayoutManager
     {
-        static GraphicsDeviceManager device = RenderingSystem.Instance._graphics;
-        public static void UpdateGUILayout(GUILayout layout)
+        static GraphicsDeviceManager graphicsDevManager = RenderingSystem.Instance._graphics;
+        
+        static void UpdateLayout(GUILayout layout)
         {
+            int windowWidth = graphicsDevManager.PreferredBackBufferWidth;
+            int windowHeight = graphicsDevManager.PreferredBackBufferHeight;
             GUIRect layoutRect = layout.owner.GetComponent<GUIRect>();
-            Vector2 currentRectSize = layoutRect.GetSize();
-            Vector2 currentRectPos = layoutRect.GetPosition();
-            int windowHeight = device.PreferredBackBufferHeight;
-            int windowWidth = device.PreferredBackBufferWidth;
+            Vector2 rootRectSize = new Vector2(windowWidth, windowHeight);
+            bool centerVert = false;
+            bool centerHor = false;
+            if (layout.m_isBranch) 
+            {
+                rootRectSize = layout.m_root.owner.GetComponent<GUIRect>().m_size - layout.m_root.m_padding*2;
+            }
             //Apply layout options
-            foreach (GUILayoutOptions option in layout.m_layoutOptions)
+            foreach(GUILayoutOptions option in layout.m_options)
             {
                 switch (option)
                 {
                     case GUILayoutOptions.STRETCH_WIDTH:
-                        layoutRect.SetSize(new Vector2(windowWidth, currentRectSize.Y));
+                        Vector2 WnewLayoutSize = new Vector2(rootRectSize.X, layoutRect.m_size.Y);
+                        layoutRect.m_size = WnewLayoutSize;
                         break;
                     case GUILayoutOptions.STRETCH_HEIGHT:
-                        layoutRect.SetSize(new Vector2(currentRectSize.X, windowHeight));
-                        break;
-                    case GUILayoutOptions.SNAP_LEFT:
-                        layoutRect.SetPosition(new Vector2(0, currentRectPos.Y));
-                        break;
-                    case GUILayoutOptions.SNAP_RIGHT:
-                        layoutRect.SetPosition(new Vector2(windowWidth - currentRectSize.X, currentRectPos.Y));
-                        break;
-                    case GUILayoutOptions.SNAP_TOP:
-                        layoutRect.SetPosition(new Vector2(currentRectPos.X, 0));
-                        break;
-                    case GUILayoutOptions.SNAP_BOTTOM:
-                        layoutRect.SetPosition(new Vector2(currentRectPos.X, windowHeight - currentRectSize.Y));
-                        break;
-                    case GUILayoutOptions.CONTENT_CENTER_HORIZONTAL:
-                        if (layout.m_managedObjects.Count <= 0) break;
-                        int biggestWidth = (int)layout.m_managedObjects.Max(x => x.GetSize().X);
-                        int newPaddingX = (int)(Math.Abs(currentRectSize.X - biggestWidth) / 2);
-                        layout.m_padding.X = newPaddingX;
+                        Vector2 HnewLayoutSize = new Vector2(layoutRect.m_size.X,rootRectSize.Y);
+                        layoutRect.m_size = HnewLayoutSize;
                         break;
                     case GUILayoutOptions.CONTENT_CENTER_VERTICAL:
-                        if (layout.m_managedObjects.Count <= 0) break;
-                        int biggestHeight = (int)layout.m_managedObjects.Max(x => x.GetSize().Y);
-                        int newPaddingY = (int)(Math.Abs(currentRectSize.Y - biggestHeight) / 2);
-                        layout.m_padding.Y = newPaddingY;
+                        centerVert = true;
+                        break;
+                    case GUILayoutOptions.CONTENT_CENTER_HORIZONTAL:
+                        centerHor = true;
+                        break;
+                    case GUILayoutOptions.CONTENT_CENTER:
+                        centerVert = true;
+                        centerHor = true;
                         break;
                 }
-                Vector2 padding = layout.m_padding;
-                Vector2 offset = layout.m_offset;
-                Vector2 spacing = layout.m_spacing;
-                Vector2 layoutDistanceCovered = Vector2.Zero;
-                foreach (GUIRect rect in layout.m_managedObjects)
-                {
-                    Vector2 rectSize = rect.GetSize();
-                    Vector2 rectCoverDistance = new Vector2(spacing.X == 0 ? 0:rectSize.X,spacing.Y == 0 ? 0:rectSize.Y);
-                    //move objects according to padding and spacing
-                    if (rect == layout.m_managedObjects.First()) {
-                        rect.SetPosition(new Vector2(currentRectPos.X + padding.X+spacing.X, currentRectPos.Y + padding.Y+spacing.Y));
-                        layoutDistanceCovered += padding + offset + rectCoverDistance;
-                    }
-                    else if(rect == layout.m_managedObjects.Last())
-                    {
-                        rect.SetPosition(new Vector2(currentRectPos.X + layoutDistanceCovered.X + offset.Y, currentRectPos.Y + layoutDistanceCovered.Y + offset.Y));
-                        layoutDistanceCovered +=rectCoverDistance+spacing+padding;
-                        layoutRect.SetSize(new Vector2(layoutDistanceCovered.X == 0 ? layout.m_managedObjects.Max(x => x.GetSize().X):layoutDistanceCovered.X, layoutDistanceCovered.Y == 0 ? layout.m_managedObjects.Max(x => x.GetSize().Y):layoutDistanceCovered.Y));
-                    }
-                    else
-                    {
-                        rect.SetPosition(new Vector2(currentRectPos.X+layoutDistanceCovered.X+spacing.X,currentRectPos.Y+layoutDistanceCovered.Y+spacing.Y));
-                        layoutDistanceCovered += rectCoverDistance + spacing;
-                    }
-                    //update parent layout with new positions of child layout (changed rect size etc).
-                    if (rect.m_isManaged)
-                    {
-                        rect.m_rectManager.InvokeOnUpdate();
-                    }
-                }
+            }
+            //This should run starting with master root layout.
+            Vector2 currentPosition = layout.owner.GetComponent<GUIRect>().m_position + layout.m_padding;
+            //Calculate currentPosition for centering.
+            Vector2 layoutCenter = Vector2.Zero;
+            if (centerHor || centerVert)
+            {
+                layoutCenter = layoutRect.m_size / 2;
+                Vector2 totalContentSize = new Vector2(centerHor? layout.m_content.Max(x => x.m_size.X):layout.m_content.Sum(x => x.m_size.X) ,centerVert ?layout.m_content.Max(y => y.m_size.Y) : layout.m_content.Sum(y => y.m_size.Y));
+                //find the starting position for content.
+                currentPosition = layoutRect.m_position + layoutCenter * new Vector2(centerHor ? 1 : 0,centerVert ? 1 : 0);
+            }
+            foreach(GUIRect element in layout.m_content)
+            {
+                //Calculate new content positions
+                
+                Vector2 newElementPos = currentPosition + layout.m_spacing - ((element.m_size / 2) * new Vector2(centerHor ? 1 : 0, centerVert ? 1 : 0));
+                element.m_position = newElementPos;
+                currentPosition += element.m_size * new Vector2(layout.m_spacing.X > 0 ? 1 : 0, layout.m_spacing.Y > 0 ? 1 : 0) + layout.m_spacing;
+                
+            }
+            //Update branches.
+            foreach(GUILayout branch in layout.m_branches)
+            {
+                UpdateLayout(branch);
             }
         }
 
-        public static void AddToLayoutGroup(ref GUILayout layoutGroup, GUIRect GUIRect)
+        public static void ResizeText(GUIRect rect,string textString)
         {
-            layoutGroup.m_managedObjects.Add(GUIRect);
-            GUIRect.m_rectManager = layoutGroup;
-            GUIRect.m_isManaged = true;
-            UpdateGUILayout(layoutGroup);
+            rect.m_size = new Vector2(Math.Max(40, ResourceManager.Instance.GetDefaultFont().MeasureString(textString).X+2), 20);
+        }
+        public static void RootLayout(GUILayout rootLayout, GUILayout branchLayout)
+        {
+            branchLayout.m_isBranch = true;
+            branchLayout.m_root = rootLayout;
+            rootLayout.m_content.Add(branchLayout.owner.GetComponent<GUIRect>());
+            rootLayout.m_branches.Add(branchLayout);
+        }
+        public static void AddContent(GUILayout layout, GUIRect content)
+        {
+            layout.m_content.Add(content);
+            UpdateLayout(layout.GetMasterRoot());
         }
     }
 }

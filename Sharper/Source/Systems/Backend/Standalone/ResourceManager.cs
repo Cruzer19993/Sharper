@@ -9,6 +9,7 @@ namespace Sharper.Systems.Backend.Management
     {
         private Dictionary<string, Texture2D> loadedTextures = new Dictionary<string, Texture2D>();
         private static ResourceManager instance;
+        private SpriteFont defaultFont;
         public static ResourceManager Instance
         {
             get { return instance; }
@@ -23,7 +24,14 @@ namespace Sharper.Systems.Backend.Management
         {
             loadedTextures = textures;
         }
-
+        public void SetDefaultFont(SpriteFont defaultFont)
+        {
+            this.defaultFont = defaultFont;
+        }
+        public SpriteFont GetDefaultFont()
+        {
+            return this.defaultFont;
+        }
         public Texture2D GetTexture(string name)
         {
             return loadedTextures[name];

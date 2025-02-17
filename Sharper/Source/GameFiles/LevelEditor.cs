@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Sharper.Backend.Standalone;
+using Sharper.Systems.Backend.Standalone;
 using Sharper.Components;
 using Sharper.Components.GUI;
 using Sharper.ECS;
 using Sharper.Helpers;
-using Sharper.Source.Helpers;
 using Sharper.Source.Structures;
 using Sharper.Structures;
 using Sharper.Systems.Backend;
@@ -13,6 +12,7 @@ using Sharper.Systems.Backend.Management;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Sharper.Source.Helpers;
 namespace Sharper.GameFiles
 {
     public class LevelEditor : BaseGame
@@ -20,6 +20,7 @@ namespace Sharper.GameFiles
         Stopwatch fpsSamplingStopwatch = new Stopwatch();
         Scene editorScene = new Scene();
         GUILayout leftSideLayoutGroup;
+        GUIRect leftSideLayoutRect;
         GUIText mapSizeText;
         Map currentMap;
         static readonly Type[] EditorTileGridComponentTypes = { typeof(Transform), typeof(MouseInteractable), typeof(EntityRenderer) };
@@ -54,17 +55,19 @@ namespace Sharper.GameFiles
             //Spawn a camera.
             editorScene.systemManager.AttachSystem(new LevelEditorCameraMover());
             editorScene.SpawnEntity(EntityHelper.CreateCameraMovable(Vector3.Zero, 1, true));
-            GUIHelper.CreateGUILayout(new Vector2(300, 200), Vector2.UnitY * 8,Vector2.Zero, Vector2.Zero, out leftSideLayoutGroup,GUILayoutOptions.STRETCH_HEIGHT,GUILayoutOptions.CONTENT_CENTER_HORIZONTAL);
+            GUIHelper.CreateLayout(new Vector2(600, 1), Vector2.UnitY * 8, out leftSideLayoutGroup, new GUILayoutOptions[] { GUILayoutOptions.CONTENT_CENTER_HORIZONTAL,GUILayoutOptions.STRETCH_HEIGHT});
             CreateMapGenerationUI();
         }
 
         void CreateMapGenerationUI()
         {
-            GUILayoutManager.AddToLayoutGroup(ref leftSideLayoutGroup, GUIHelper.CreateText(Vector2.Zero, "Map Generation Settings",Color.White,out GUIText mgt).GetComponent<GUIRect>());
-            GUILayoutManager.AddToLayoutGroup(ref leftSideLayoutGroup, GUIHelper.CreateGUILayout(Vector2.Zero, Vector2.UnitX*8, Vector2.Zero, Vector2.Zero, out GUILayout InputBoxLayout,GUILayoutOptions.CONTENT_CENTER_VERTICAL).GetComponent<GUIRect>());
-            GUILayoutManager.AddToLayoutGroup(ref InputBoxLayout, GUIHelper.CreateText(Vector2.Zero, "Map Size", Color.Black, out GUIText mst).GetComponent<GUIRect>());
-            GUILayoutManager.AddToLayoutGroup(ref InputBoxLayout, GUIHelper.CreateInputBox(Vector2.Zero,new Vector2(80,20),out mapSizeText,out GUIInputBox sip,"0").GetComponent<GUIRect>());
-            GUILayoutManager.UpdateGUILayout(InputBoxLayout);
+            GUILayoutManager.AddContent(leftSideLayoutGroup, GUIHelper.CreateText("World Generation Settings").GetComponent<GUIRect>());
+            GUILayoutManager.AddContent(leftSideLayoutGroup, GUIHelper.CreateText("World Generation Settings 2").GetComponent<GUIRect>());
+            GUIHelper.CreateLayout(new Vector2(302, 22), Vector2.UnitX * 4, out GUILayout testLayout, new GUILayoutOptions[] { GUILayoutOptions.CONTENT_CENTER});
+            GUILayoutManager.RootLayout(leftSideLayoutGroup,testLayout);
+            GUILayoutManager.AddContent(testLayout, GUIHelper.CreateText("Text 1").GetComponent<GUIRect>());
+            GUILayoutManager.AddContent(testLayout, GUIHelper.CreateText("Text 2").GetComponent<GUIRect>());
+            
         }
 
         public static Entity CreateGridTile(Vector3 position)

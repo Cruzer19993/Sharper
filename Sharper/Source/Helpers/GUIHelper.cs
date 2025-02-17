@@ -1,156 +1,98 @@
-﻿using Sharper.Components;
+﻿using Microsoft.Xna.Framework;
 using Sharper.Components.GUI;
 using Sharper.ECS;
-using System;
-using Microsoft.Xna.Framework;
 using Sharper.Systems.Backend.Management;
-using Sharper.Systems.Backend;
-using System.Linq;
+using System;
 namespace Sharper.Source.Helpers
 {
-    public class GUIHelper
+    public static class GUIHelper
     {
-        public static Entity CreateButton(Vector2 position, Vector2 size, string displayText,MouseButton activeButton ,out GUIRect buttonRect, out GUIText buttonText, out GUIButton buttonComp)
+        public static Entity CreateLayout(Vector2 layoutSize, Vector2 contentSpacing, out GUILayout layout, params GUILayoutOptions[] options)
         {
-            Entity buttonEntity = new Entity("Button", new Type[] { typeof(GUIRect), typeof(GUIButton), typeof(GUIText),typeof(GUISprite)});
-            GUIRect btnRect = buttonEntity.GetComponent<GUIRect>();
-            GUIText btnText = buttonEntity.GetComponent<GUIText>();
-            GUIButton btnComp = buttonEntity.GetComponent<GUIButton>();
-            GUISprite btnSprite = buttonEntity.GetComponent<GUISprite>();
-            btnRect.SetPosition(position);
-            btnRect.SetSize(size);
-            btnText.m_text = displayText;
-            btnText.m_color = Color.Black;
-            btnComp.activateButton = activeButton;
-            buttonRect = btnRect;
-            buttonText = btnText;
-            buttonComp = btnComp;
-            btnSprite.m_sprite.m_textureName = "GUIDefaultTexture";
-            btnSprite.m_sprite.m_color = Color.White;
+            Entity layoutEntity = new Entity("GUILayout", new Type[] { typeof(GUIRect), typeof(GUILayout), typeof(GUISprite) });
+            layoutEntity.GetComponent<GUILayout>().m_spacing = contentSpacing;
+            layoutEntity.GetComponent<GUILayout>().m_options = options;
+            layoutEntity.GetComponent<GUIRect>().m_size = layoutSize;
+            layoutEntity.GetComponent<GUISprite>().m_uiSprite.m_textureName = "GUIRectangleHR";
+            layout = layoutEntity.GetComponent<GUILayout>();
             if (SceneManager.CurrentScene != null)
             {
-                SceneManager.CurrentScene.SpawnEntity(buttonEntity);
+                SceneManager.CurrentScene.SpawnEntity(layoutEntity);
             }
-            return buttonEntity;
+            return layoutEntity;
         }
-        public static Entity CreateButton(Vector2 position, Vector2 size, string displayText, MouseButton activeButton, Sprite buttonSprite, out GUIRect buttonRect, out GUIText buttonText, out GUIButton buttonComp)
+        public static Entity CreateLayout(Vector2 layoutSize, Vector2 contentSpacing,Vector2 position ,out GUILayout layout, params GUILayoutOptions[] options)
         {
-            Entity buttonEntity = new Entity("Button", new Type[] { typeof(GUIRect), typeof(GUIButton), typeof(GUIText) });
-            GUIRect btnRect = buttonEntity.GetComponent<GUIRect>();
-            GUIText btnText = buttonEntity.GetComponent<GUIText>();
-            GUIButton btnComp = buttonEntity.GetComponent<GUIButton>();
-            buttonEntity.GetComponent<GUISprite>().m_sprite = buttonSprite;
-            btnRect.SetPosition(position);
-            btnRect.SetSize(size);
-            btnText.m_text = displayText;
-            btnText.m_color = Color.Black;
-            btnComp.activateButton = activeButton;
-            buttonRect = btnRect;
-            buttonText = btnText;
-            buttonComp = btnComp;
+            Entity layoutEntity = new Entity("GUILayout", new Type[] { typeof(GUIRect), typeof(GUILayout) });
+            layoutEntity.GetComponent<GUILayout>().m_spacing = contentSpacing;
+            layoutEntity.GetComponent<GUILayout>().m_options = options;
+            layoutEntity.GetComponent<GUIRect>().m_size = layoutSize;
+            layoutEntity.GetComponent<GUIRect>().m_position = position;
+            layout = layoutEntity.GetComponent<GUILayout>();
             if (SceneManager.CurrentScene != null)
             {
-                SceneManager.CurrentScene.SpawnEntity(buttonEntity);
+                SceneManager.CurrentScene.SpawnEntity(layoutEntity);
             }
-            return buttonEntity;
+            return layoutEntity;
         }
-        public static Entity CreateInputBox(Vector2 position, Vector2 size,out GUIText InputBoxText,out GUIInputBox InputBoxComponent,string startingText = "")
+        public static Entity CreateLayout(Vector2 layoutSize, Vector2 contentSpacing,Vector2 position, Vector2 padding ,out GUILayout layout)
         {
-            Entity inputBoxEntity = new Entity("InputBox", new Type[] { typeof(GUIRect), typeof(GUIInputBox), typeof(GUIText),typeof(GUISprite) });
-            GUIRect ibRect = inputBoxEntity.GetComponent<GUIRect>();
-            GUIText ibText = inputBoxEntity.GetComponent<GUIText>();
-            ibRect.SetPosition(position);
-            ibRect.SetSize(size);
-            ibText.m_color = Color.Black;
-            ibText.m_text = startingText;
-            InputBoxText = ibText;
-            inputBoxEntity.GetComponent<GUISprite>().m_sprite.m_textureName = "GUIRectangle";
-            inputBoxEntity.GetComponent<GUISprite>().m_sprite.m_color = Color.White;
-            InputBoxComponent = inputBoxEntity.GetComponent<GUIInputBox>();
+            Entity layoutEntity = new Entity("GUILayout", new Type[] { typeof(GUIRect), typeof(GUILayout) });
+            layoutEntity.GetComponent<GUILayout>().m_spacing = contentSpacing;
+            layoutEntity.GetComponent<GUILayout>().m_padding = padding;
+            layoutEntity.GetComponent<GUIRect>().m_size = layoutSize;
+            layoutEntity.GetComponent<GUIRect>().m_position=position;
+            layout = layoutEntity.GetComponent<GUILayout>();
             if (SceneManager.CurrentScene != null)
             {
-                SceneManager.CurrentScene.SpawnEntity(inputBoxEntity);
+                SceneManager.CurrentScene.SpawnEntity(layoutEntity);
             }
-            return inputBoxEntity;
-
+            return layoutEntity;
         }
 
-        public static Entity CreateUIPanel(Vector2 position, Vector2 size, Sprite panelSprite)
+        public static Entity CreateText(string initialText, out GUIRect textRect)
         {
-            Entity panelEntity = new Entity("UIPanel", new Type[] {typeof(GUIRect),typeof(GUISprite) });
-            panelEntity.GetComponent<GUIRect>().SetPosition(position);
-            panelEntity.GetComponent<GUIRect>().SetSize(size);
-            panelEntity.GetComponent<GUISprite>().m_sprite = panelSprite;
+            Entity textEntity = new Entity("Text", new Type[] { typeof(GUIRect), typeof(GUIText) });
+            textEntity.GetComponent<GUIText>().Text = initialText;
+            textRect = textEntity.GetComponent<GUIRect>();
             if (SceneManager.CurrentScene != null)
-            {
-                SceneManager.CurrentScene.SpawnEntity(panelEntity);
-            }
-            return panelEntity;
-        }
-
-        public static Entity CreateText(Vector2 position, string text, Color textColor, out GUIText Text)
-        {
-            Entity textEntity = new Entity("Text", new Type[] {typeof(GUIRect),typeof(GUIText) });
-            textEntity.GetComponent<GUIRect>().SetPosition(position);
-            textEntity.GetComponent<GUIRect>().SetSize(new Vector2(text.Count()*10,20));
-            textEntity.GetComponent<GUIText>().m_text = text;
-            Text = textEntity.GetComponent<GUIText>();
-            if(SceneManager.CurrentScene != null)
             {
                 SceneManager.CurrentScene.SpawnEntity(textEntity);
             }
             return textEntity;
         }
-
-        public static  Entity CreateGUILayout(Vector2 size,Vector2 spacing, Vector2 padding, Vector2 offset, out GUILayout newLayoutGroup, params GUILayoutOptions[] options)
+        public static Entity CreateText(string initialText)
         {
-            Entity layoutGroupEntity = new Entity("LayoutGroup", new Type[] { typeof(GUILayout), typeof(GUIRect),typeof(GUISprite) });
-            newLayoutGroup = layoutGroupEntity.GetComponent<GUILayout>();
-            newLayoutGroup.m_spacing = spacing;
-            newLayoutGroup.m_padding = padding;
-            newLayoutGroup.m_offset = offset;
-            newLayoutGroup.m_layoutOptions = options;
-            layoutGroupEntity.GetComponent<GUIRect>().SetSize(size);
+            Entity textEntity = new Entity("Text", new Type[] { typeof(GUIRect), typeof(GUIText) });
+            textEntity.GetComponent<GUIText>().Text= initialText;
             if (SceneManager.CurrentScene != null)
             {
-                SceneManager.CurrentScene.SpawnEntity(layoutGroupEntity);
+                SceneManager.CurrentScene.SpawnEntity(textEntity);
             }
-            return layoutGroupEntity;
+            return textEntity;
         }
-
-        public static Entity CreateGridGUILayout(Vector2 size,Vector2 spacing, Vector2 padding, Vector2 offset, Vector2 cellSize,int numberOfColumns ,bool enforceCellSize, out GUILayout newLayoutGroup,params GUILayoutOptions[] options)
+        public static Entity CreateText(string initialText,Vector2 rectSize)
         {
-            Entity layoutGroupEntity = new Entity("HorizontalLayoutGroup", new Type[] { typeof(GUIGrid), typeof(GUIRect) });
-            newLayoutGroup = layoutGroupEntity.GetComponent<GUIGrid>();
-            GUIGrid newLayoutGroupGrid = (GUIGrid)newLayoutGroup;
-            newLayoutGroupGrid.m_spacing = spacing;
-            newLayoutGroupGrid.m_padding = padding;
-            newLayoutGroupGrid.m_offset = offset;
-            newLayoutGroupGrid.m_cellSize = cellSize;
-            newLayoutGroupGrid.m_enforceCellSize = enforceCellSize;
-            newLayoutGroupGrid.m_columns = numberOfColumns;
-            newLayoutGroupGrid.m_layoutOptions = options;
-            layoutGroupEntity.GetComponent<GUIRect>().SetScale(size);
+            Entity textEntity = new Entity("Text", new Type[] { typeof(GUIRect), typeof(GUIText) });
+            textEntity.GetComponent<GUIText>().Text = initialText;
+            textEntity.GetComponent<GUIRect>().m_size = rectSize;
             if (SceneManager.CurrentScene != null)
             {
-                SceneManager.CurrentScene.SpawnEntity(layoutGroupEntity);
+                SceneManager.CurrentScene.SpawnEntity(textEntity);
             }
-            return layoutGroupEntity;
+            return textEntity;
         }
-
-        public static Entity CreateCheckbox(bool startingValue, out GUICheckbox gUICheckbox)
+        public static Entity CreateImage(Vector2 position, Sprite imageSprite, out GUISprite image)
         {
-            Entity checkboxEntity = new Entity("Checkbox", new Type[] { typeof(GUIRect), typeof(EntityRenderer), typeof(GUICheckbox) });
-            GUICheckbox cb = checkboxEntity.GetComponent<GUICheckbox>();
-            cb.isChecked = startingValue;
-            checkboxEntity.GetComponent<EntityRenderer>().m_sprite.m_textureName = startingValue ? cb.checkedTexName :cb.uncheckedTexName;
-            checkboxEntity.GetComponent<GUIRect>().SetSize(Vector2.One * 16);
-            gUICheckbox = cb;
+            Entity imageEntity = new Entity("Image", new Type[] { typeof(GUISprite), typeof(GUIRect) });
+            imageEntity.GetComponent<GUIRect>().m_position = position;
+            imageEntity.GetComponent<GUISprite>().m_uiSprite = imageSprite;
+            image = imageEntity.GetComponent<GUISprite>();
             if (SceneManager.CurrentScene != null)
             {
-                SceneManager.CurrentScene.SpawnEntity(checkboxEntity);
+                SceneManager.CurrentScene.SpawnEntity(imageEntity);
             }
-            return checkboxEntity;
+            return imageEntity;
         }
     }
 }

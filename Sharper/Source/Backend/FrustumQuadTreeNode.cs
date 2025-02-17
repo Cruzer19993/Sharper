@@ -64,7 +64,7 @@ namespace Sharper.Backend
         {
             // If this node does not intersect the frustum, skip it
             if (nodeBoundary.Intersects(frustum))
-            {//if we intersect, skip this node and go to children.
+            {//if we intersect, skip this node and go to m_children.
                 if (children != null)
                 {
                     foreach (var child in children)
