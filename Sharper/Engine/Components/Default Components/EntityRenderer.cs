@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Sharper.Components.GUI;
 using Sharper.Systems.Backend;
 using System.Collections.Generic;
@@ -43,12 +44,14 @@ namespace Sharper.ECS
 
     public class Sprite
     {
+        
         public Sprite(int x = 0, int y = 0)
         {
             m_atlasX = x;
             m_atlasY = y;
             this.m_color = Color.White;
             m_textureName = "";
+            m_ownTexture = null;
         }
 
         public Sprite(int x, int y, Color color)
@@ -57,16 +60,26 @@ namespace Sharper.ECS
             m_atlasY = y;
             this.m_color = color;
             m_textureName = "";
+            m_ownTexture = null;
         }
         public Sprite(string textureName,Color color)
         {
             m_atlasX = m_atlasY = 0;
             m_color = color;
             m_textureName = textureName;
+            m_ownTexture = null;
+        }
+        public Sprite(Texture2D ownTexture)
+        {
+            m_atlasX = m_atlasY = 0;
+            m_color = Color.White;
+            m_textureName = "";
+            m_ownTexture = ownTexture;
         }
 
         public int m_atlasX, m_atlasY;
         public Color m_color;
         public string m_textureName;
+        public Texture2D m_ownTexture;
     }
 }

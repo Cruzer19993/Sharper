@@ -1,2 +1,2 @@
-﻿using var game = new Sharper.GameFiles.LevelEditor();
-game.Run();
+﻿using var gameFile = new GameSpace.MainGame();
+gameFile.Run();

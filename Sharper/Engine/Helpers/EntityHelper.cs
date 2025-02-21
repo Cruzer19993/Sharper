@@ -12,8 +12,12 @@ namespace Sharper.Helpers
         {
             Entity CameraEntity = new Entity("Camera", new Type[] { typeof(Camera), typeof(Transform) });
             CameraEntity.GetComponent<Transform>().Position = position;
-            CameraEntity.GetComponent<Camera>().isMainCamera = isMainCamera;
-            CameraEntity.GetComponent<Camera>().cameraZoom = cameraZoom;
+            CameraEntity.GetComponent<Camera>().m_isMainCamera = isMainCamera;
+            CameraEntity.GetComponent<Camera>().m_cameraZoom = cameraZoom;
+            if (SceneManager.CurrentScene != null)
+            {
+                SceneManager.CurrentScene.SpawnEntity(CameraEntity);
+            }
             return CameraEntity;
         }
         public static Entity CreateCameraMovable(Vector3 position, float cameraZoom = 1f, bool isMainCamera = false)
@@ -21,9 +25,13 @@ namespace Sharper.Helpers
             Entity CameraEntity = new Entity("Camera", new Type[] { typeof(Camera), typeof(Transform),typeof(SimpleMover) });
             CameraEntity.DontRemoveWhenUnused = true;
             CameraEntity.GetComponent<Transform>().Position = position;
-            CameraEntity.GetComponent<Camera>().isMainCamera = isMainCamera;
-            CameraEntity.GetComponent<Camera>().cameraZoom = cameraZoom;
+            CameraEntity.GetComponent<Camera>().m_isMainCamera = isMainCamera;
+            CameraEntity.GetComponent<Camera>().m_cameraZoom = cameraZoom;
             CameraEntity.GetComponent<SimpleMover>().movementSpeed = 20f;
+            if (SceneManager.CurrentScene != null)
+            {
+                SceneManager.CurrentScene.SpawnEntity(CameraEntity);
+            }
             return CameraEntity;
         }
 

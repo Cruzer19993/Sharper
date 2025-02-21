@@ -34,9 +34,9 @@ namespace Sharper.Systems.GameSystems
             if (InputSystem.IsKeyDown(Keys.S)) dir -= Vector3.UnitY;
             Vector3.Normalize(dir);
             deltaMovement += frameTime;
-            float currentCameraZoom = target.GetComponent<Camera>().cameraZoom;
-            target.GetComponent<Camera>().cameraZoom += InputSystem.ScrollDelta * scrollSpeed * frameTime;
-            //target.GetComponent<Camera>().cameraZoom += InputSystem.ScrollDelta * scrollSpeed * frameTime;
+            float currentCameraZoom = target.GetComponent<Camera>().m_cameraZoom;
+            target.GetComponent<Camera>().m_cameraZoom += InputSystem.ScrollDelta * scrollSpeed * frameTime;
+            //target.GetComponent<Camera>().m_cameraZoom += InputSystem.ScrollDelta * scrollSpeed * frameTime;
             target.GetComponent<Transform>().Position += dir * target.GetComponent<SimpleMover>().movementSpeed * frameTime;
         }
 

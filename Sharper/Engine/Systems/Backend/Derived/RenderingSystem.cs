@@ -103,7 +103,7 @@ namespace Sharper.Systems.Backend
             if (availableCameras.Length > 0)
                 foreach (Entity camera in availableCameras)
                 {
-                    if (camera.GetComponent<Camera>().isMainCamera)
+                    if (camera.GetComponent<Camera>().m_isMainCamera)
                     {
                         currentCamera = camera.GetComponent<Camera>();
                         currentCameraTransform = camera.GetComponent<Transform>();
@@ -140,7 +140,7 @@ namespace Sharper.Systems.Backend
             if (currentCamera == null || currentCameraTransform == null)
                 return Rectangle.Empty;
             //When i multiplied this by 4 only I and god knew why, now, only god knows
-            float cameraScale = 1/currentCamera.cameraZoom;
+            float cameraScale = 1/currentCamera.m_cameraZoom;
             int frustumWidth = (int)(_graphics.PreferredBackBufferWidth*cameraScale);
             int frustumHeight = (int)(_graphics.PreferredBackBufferHeight*cameraScale);
             int frustumX = (int)(currentCameraTransform.Position.X*cameraScale);

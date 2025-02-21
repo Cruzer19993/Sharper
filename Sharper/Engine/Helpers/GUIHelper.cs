@@ -116,5 +116,25 @@ namespace Sharper.Source.Helpers
             }
             return inputBoxEntity;
         }
+
+        public static Entity CreateButton(string buttonName,out GUIButton button)
+        {
+            Entity buttonEntity = new Entity("UIButton", new Type[] { typeof(GUIRect), typeof(GUISprite), typeof(GUIButton), typeof(GUILayout) });
+            Entity buttonTextEntity = new Entity("UIButtonText", new Type[] { typeof(GUIRect), typeof(GUIText) });
+            GUILayout btnLayout = buttonEntity.GetComponent<GUILayout>();
+            btnLayout.m_options = new GUILayoutOptions[] { GUILayoutOptions.CONTENT_CENTER};
+            buttonEntity.GetComponent<GUISprite>().m_uiSprite = new Sprite("GUIDefaultTexture", Color.White);
+            buttonTextEntity.GetComponent<GUIText>().Text = buttonName;
+            buttonTextEntity.GetComponent<GUIText>().m_color = Color.Black;
+            button = buttonEntity.GetComponent<GUIButton>();
+            buttonEntity.GetComponent<GUIRect>().m_size = buttonTextEntity.GetComponent<GUIRect>().m_size + Vector2.UnitX*20f + Vector2.UnitY*4f;
+            GUILayoutManager.AddContent(btnLayout, buttonTextEntity.GetComponent<GUIRect>());
+            if (SceneManager.CurrentScene != null)
+            {
+                SceneManager.CurrentScene.SpawnEntity(buttonEntity);
+                SceneManager.CurrentScene.SpawnEntity(buttonTextEntity);
+            }
+            return buttonEntity;
+        }
     }
 }

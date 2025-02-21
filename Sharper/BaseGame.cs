@@ -120,11 +120,11 @@ namespace Sharper
 
             GraphicsDevice.SetRenderTarget(null);
             Texture2D hitboxOutlineTex = _resourceManager.GetTexture("GUIRectangleHR");
-            Matrix viewMatrix = Matrix.CreateScale(_renderingSystem.currentCamera.cameraZoom);
+            Matrix viewMatrix = Matrix.CreateScale(_renderingSystem.currentCamera.m_cameraZoom);
             Transform cameraTransform = _renderingSystem.currentCameraTransform;
             viewMatrix *= Matrix.CreateTranslation(-cameraTransform.Position.X, -cameraTransform.Position.Y, 0);
             int pps = _renderingSystem.SpriteAtlasSettings.pixelsPerSprite;
-            GraphicsDevice.Clear(Color.Violet);
+            GraphicsDevice.Clear(_renderingSystem.currentCamera.m_backbufferColor);
             //Render chunk borders.
             /*_spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: viewMatrix);
             Rectangle _gridSourceRect = new Rectangle(0, 0, pps, pps);
@@ -181,9 +181,9 @@ namespace Sharper
             {
                 GUIRect rect = x.GetComponent<GUIRect>();
                 Sprite sprite = x.GetComponent<GUISprite>().m_uiSprite;
-                if (sprite.m_textureName != "")
+                if (sprite.m_textureName != "" || sprite.m_ownTexture != null)
                 {
-                    Texture2D spriteTex = ResourceManager.Instance.GetTexture(sprite.m_textureName);
+                    Texture2D spriteTex = sprite.m_ownTexture != null ? sprite.m_ownTexture : ResourceManager.Instance.GetTexture(sprite.m_textureName);
                     _spriteBatch.Draw(spriteTex, rect.GetRect(), sprite.m_color);
                 }
                 else

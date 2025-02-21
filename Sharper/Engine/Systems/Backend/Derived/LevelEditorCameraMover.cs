@@ -68,7 +68,7 @@ namespace Sharper
             }
             else
             {
-                target.GetComponent<Transform>().position -= new Vector3(mouseMovementVector.X, mouseMovementVector.Y, 0f)*(1/currentCamera.cameraZoom);
+                target.GetComponent<Transform>().position -= new Vector3(mouseMovementVector.X, mouseMovementVector.Y, 0f)*(1/currentCamera.m_cameraZoom);
             }
             if (resetCameraToCenter)
             {
@@ -76,8 +76,8 @@ namespace Sharper
                 resetCameraToCenter = false;
             }
             float scrollDelta = InputSystem.ScrollDelta;
-            target.GetComponent<Camera>().cameraZoom += scrollDelta * 20f * frameTime;
-            target.GetComponent<Camera>().cameraZoom = Math.Clamp(target.GetComponent<Camera>().cameraZoom, 0.05f, 5f);
+            target.GetComponent<Camera>().m_cameraZoom += scrollDelta * 20f * frameTime;
+            target.GetComponent<Camera>().m_cameraZoom = Math.Clamp(target.GetComponent<Camera>().m_cameraZoom, 0.05f, 5f);
             if (scrollDelta < 0)
             {
                 //TODO: Translate mouse position to world position  
